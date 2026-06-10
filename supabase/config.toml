@@ -1,0 +1,42 @@
+# Supabase 로컬 개발 설정
+# supabase start 로 로컬 스택 실행
+
+[api]
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+port = 54323
+
+[inbucket]
+port = 54324
+
+[storage]
+file_size_limit = "50MiB"
+
+[auth]
+site_url = "http://localhost:8081"
+additional_redirect_urls = [
+  "exp://localhost:8081/--/auth/callback",
+  "ott-info://auth/callback"
+]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.external.kakao]
+enabled = true
+client_id = "env(KAKAO_REST_API_KEY)"
+secret = "env(KAKAO_CLIENT_SECRET)"
+
+[functions.tmdb-proxy]
+verify_jwt = false   # 함수 내부에서 직접 JWT 검증
+
+[functions.delete-account]
+verify_jwt = false
