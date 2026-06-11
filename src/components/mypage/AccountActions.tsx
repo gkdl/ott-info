@@ -1,12 +1,7 @@
 import React from "react";
-import { View, Text, Pressable, Linking, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 import { useSignOut, useDeleteAccount } from "@/hooks/useAuth";
-
-// 웹 기반 계정·데이터 삭제 요청 URL (Google Play 요구사항)
-// 실제 배포 시 공개 접근 가능한 URL로 교체
-const ACCOUNT_DELETION_WEB_URL = "https://your-app.com/account/delete";
-const PRIVACY_POLICY_URL = "https://your-app.com/privacy";
-const TERMS_URL = "https://your-app.com/terms";
 
 interface MenuItemProps {
   label: string;
@@ -45,6 +40,7 @@ function MenuItem({ label, sublabel, onPress, variant = "default", icon }: MenuI
 }
 
 export function AccountActions() {
+  const router = useRouter();
   const { confirmSignOut, isPending: isSignOutPending } = useSignOut();
   const { confirmDeleteAccount, isPending: isDeletePending } = useDeleteAccount();
 
@@ -56,12 +52,12 @@ export function AccountActions() {
         <MenuItem
           icon="🔒"
           label="개인정보 처리방침"
-          onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+          onPress={() => router.push("/privacy")}
         />
         <MenuItem
           icon="📄"
           label="이용약관"
-          onPress={() => Linking.openURL(TERMS_URL)}
+          onPress={() => router.push("/terms")}
         />
       </View>
 
@@ -72,12 +68,6 @@ export function AccountActions() {
           icon="🔓"
           label="로그아웃"
           onPress={confirmSignOut}
-        />
-        <MenuItem
-          icon="🌐"
-          label="웹에서 계정 삭제 요청"
-          sublabel="앱 외부 삭제 경로 (Google Play 정책)"
-          onPress={() => Linking.openURL(ACCOUNT_DELETION_WEB_URL)}
         />
         <MenuItem
           icon="🗑"

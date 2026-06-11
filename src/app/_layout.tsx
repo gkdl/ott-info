@@ -52,6 +52,14 @@ export default function RootLayout() {
             animation: "fade",
           }}
         />
+        <Stack.Screen
+          name="privacy"
+          options={{ animation: "slide_from_right" }}
+        />
+        <Stack.Screen
+          name="terms"
+          options={{ animation: "slide_from_right" }}
+        />
       </Stack>
     </AppProviders>
   );
