@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
-import { signInWithKakao, signOut, deleteAccount, agreeToEula } from "@/services/auth";
+import { signInWithKakao, signOut, deleteAccount, agreeToEula, updateNickname } from "@/services/auth";
 import { useAuthStore, useAuthStatus, useCurrentProfile } from "@/store/authStore";
 import { queryClient } from "@/lib/queryClient";
 
@@ -127,6 +127,16 @@ export function useDeleteAccount() {
   }
 
   return { confirmDeleteAccount, isPending: mutation.isPending };
+}
+
+// ─── 닉네임 수정 훅 ──────────────────────────────────────────────────────────
+
+export function useUpdateNickname() {
+  return useMutation({
+    mutationFn: ({ userId, nickname }: { userId: string; nickname: string }) =>
+      updateNickname(userId, nickname),
+    onError: (err: Error) => Alert.alert("수정 실패", err.message),
+  });
 }
 
 // ─── 인증 상태 훅 (컴포넌트 소비용) ─────────────────────────────────────────

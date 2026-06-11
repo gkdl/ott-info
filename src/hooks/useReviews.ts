@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
+import Toast from "react-native-toast-message";
 import {
   fetchReviews,
   createReview,
@@ -58,6 +59,7 @@ export function useCreateReview(contentId: string, contentType: "movie" | "tv") 
     onSuccess: () => {
       // 해당 콘텐츠의 모든 정렬 캐시 무효화
       queryClient.invalidateQueries({ queryKey: reviewKeys.all });
+      Toast.show({ type: "success", text1: "리뷰가 등록되었습니다." });
     },
     onError: (err: Error) => {
       Alert.alert("리뷰 작성 실패", err.message);
@@ -74,6 +76,7 @@ export function useUpdateReview(contentId: string, contentType: "movie" | "tv") 
     mutationFn: (input: UpdateReviewInput) => updateReview(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: reviewKeys.all });
+      Toast.show({ type: "success", text1: "리뷰가 수정되었습니다." });
     },
     onError: (err: Error) => {
       Alert.alert("리뷰 수정 실패", err.message);
@@ -219,9 +222,11 @@ export function useCreateReply(parentId: number) {
 export function useCommunityFeed() {
   return useInfiniteQuery({
     queryKey: reviewKeys.communityFeed(),
-    queryFn: ({ pageParam = 4 }) => fetchCommunityFeed(pageParam as number),
-    initialPageParam: 4,
-    getNextPageParam: () => undefined, // 홈 피드는 고정 수량, 더보기 없음
+    queryFn: ({ pageParam = 0 }) =>
+      fetchCommunityFeed(10, pageParam as number),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === 10 ? allPages.length * 10 : undefined,
     staleTime: 3 * 60 * 1000,
   });
 }

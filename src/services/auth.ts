@@ -189,3 +189,18 @@ export async function hasAgreedToEula(userId: string): Promise<boolean> {
 
   return !!(data as { eula_agreed_at: string | null } | null)?.eula_agreed_at;
 }
+
+// ─── 닉네임 수정 ──────────────────────────────────────────────────────────────
+
+export async function updateNickname(userId: string, nickname: string): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ nickname, updated_at: new Date().toISOString() })
+    .eq("id", userId);
+  if (error) throw new Error(error.message);
+  useAuthStore.getState().setProfile({
+    ...useAuthStore.getState().profile!,
+    nickname,
+    updated_at: new Date().toISOString(),
+  });
+}

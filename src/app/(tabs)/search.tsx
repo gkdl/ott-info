@@ -14,6 +14,7 @@ import { useSearch } from "@/hooks/useTmdb";
 import { PosterImage } from "@/components/ui/CachedImage";
 import { EmptyView, ErrorView } from "@/components/shared/StateViews";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useSearchStore } from "@/store/searchStore";
 import type { TmdbMultiResult } from "@/types/tmdb";
 
 export default function SearchScreen() {
@@ -21,6 +22,7 @@ export default function SearchScreen() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounce(query, 400);
+  const { recentQueries, addQuery, removeQuery, clearAll } = useSearchStore();
 
   const {
     data,
@@ -32,8 +34,18 @@ export default function SearchScreen() {
   } = useSearch(debouncedQuery);
 
   const results = data?.pages.flatMap((p) => p.results) ?? [];
-  const showEmpty =
-    debouncedQuery.length >= 2 && !isLoading && results.length === 0;
+  const showEmpty = debouncedQuery.length >= 2 && !isLoading && results.length === 0;
+
+  // 검색어가 확정되면 최근 검색어에 저장
+  React.useEffect(() => {
+    if (debouncedQuery.length >= 2) {
+      addQuery(debouncedQuery);
+    }
+  }, [debouncedQuery]);
+
+  function handleRecentSelect(q: string) {
+    setQuery(q);
+  }
 
   function renderItem({ item }: { item: TmdbMultiResult }) {
     if (item.media_type === "person") return null;
@@ -87,20 +99,50 @@ export default function SearchScreen() {
         )}
       </View>
 
-      {/* 상태별 UI */}
+      {/* 입력 전: 최근 검색어 or 힌트 */}
       {query.length < 2 && (
-        <View style={styles.hintArea}>
-          <Text style={styles.hintText}>영화 또는 드라마 제목을 입력하세요</Text>
-        </View>
+        <>
+          {recentQueries.length > 0 ? (
+            <View>
+              <View style={styles.recentHeader}>
+                <Text style={styles.recentHeaderText}>최근 검색어</Text>
+                <Pressable onPress={clearAll}>
+                  <Text style={styles.clearAllText}>전체 삭제</Text>
+                </Pressable>
+              </View>
+              {recentQueries.map((q) => (
+                <Pressable
+                  key={q}
+                  style={styles.recentItem}
+                  onPress={() => handleRecentSelect(q)}
+                >
+                  <Text style={styles.recentIcon}>🕐</Text>
+                  <Text style={styles.recentItemText}>{q}</Text>
+                  <Pressable
+                    style={styles.recentItemRemove}
+                    onPress={() => removeQuery(q)}
+                    hitSlop={8}
+                  >
+                    <Text style={styles.recentItemRemoveText}>✕</Text>
+                  </Pressable>
+                </Pressable>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.hintArea}>
+              <Text style={styles.hintEmoji}>🔍</Text>
+              <Text style={styles.hintText}>영화 또는 드라마 제목을 입력하세요</Text>
+            </View>
+          )}
+        </>
       )}
 
-      {isLoading && (
+      {/* 검색 중 */}
+      {isLoading && query.length >= 2 && (
         <ActivityIndicator color="#6366f1" style={{ marginTop: 40 }} />
       )}
 
-      {isError && (
-        <ErrorView message="검색 중 오류가 발생했습니다." />
-      )}
+      {isError && <ErrorView message="검색 중 오류가 발생했습니다." />}
 
       {showEmpty && (
         <EmptyView
@@ -147,8 +189,32 @@ const styles = StyleSheet.create({
   searchIcon: { fontSize: 16 },
   input: { flex: 1, color: "#f9fafb", fontSize: 16 },
   clearIcon: { color: "#6b7280", fontSize: 16 },
-  hintArea: { flex: 1, alignItems: "center", justifyContent: "center" },
+  // 최근 검색어
+  recentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  recentHeaderText: { color: "#9ca3af", fontSize: 13, fontWeight: "600" },
+  clearAllText: { color: "#6366f1", fontSize: 13 },
+  recentItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    gap: 12,
+  },
+  recentIcon: { fontSize: 14 },
+  recentItemText: { flex: 1, color: "#e5e7eb", fontSize: 15 },
+  recentItemRemove: { padding: 4 },
+  recentItemRemoveText: { color: "#4b5563", fontSize: 14 },
+  // 힌트
+  hintArea: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
+  hintEmoji: { fontSize: 40 },
   hintText: { color: "#4b5563", fontSize: 14 },
+  // 검색 결과
   resultItem: {
     flexDirection: "row",
     gap: 14,

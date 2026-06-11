@@ -219,10 +219,10 @@ export async function toggleLike(
 
 // ─── 커뮤니티 피드 (홈 화면) ─────────────────────────────────────────────────
 
-export async function fetchCommunityFeed(limit = 4): Promise<ReviewWithProfile[]> {
+export async function fetchCommunityFeed(limit = 10, offset = 0): Promise<ReviewWithProfile[]> {
   const { data, error } = await supabase.rpc(
     "get_community_feed_excluding_blocked",
-    { p_limit: limit }
+    { p_limit: limit, p_offset: offset }
   );
 
   if (error) throw new Error(error.message);

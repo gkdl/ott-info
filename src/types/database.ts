@@ -173,7 +173,7 @@ export interface Database {
       };
 
       get_community_feed_excluding_blocked: {
-        Args: { p_limit: number };
+        Args: { p_limit: number; p_offset?: number };
         Returns: Array<
           Database["public"]["Tables"]["reviews"]["Row"] & {
             profile: Pick<

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { FeedSkeleton } from "@/components/shared/Skeleton";
@@ -78,7 +78,15 @@ function FeedCard({ review }: FeedCardProps) {
 }
 
 export function CommunityFeed() {
-  const { data, isLoading, isError, refetch } = useCommunityFeed();
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useCommunityFeed();
   const isBlocked = useBlockStore((s) => s.isBlocked);
 
   if (isLoading) return <FeedSkeleton />;
@@ -109,6 +117,19 @@ export function CommunityFeed() {
           {reviews.map((review) => (
             <FeedCard key={review.id} review={review} />
           ))}
+          {hasNextPage && (
+            <Pressable
+              style={styles.loadMoreButton}
+              onPress={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+            >
+              {isFetchingNextPage ? (
+                <ActivityIndicator color="#6366f1" />
+              ) : (
+                <Text style={styles.loadMoreText}>리뷰 더 보기</Text>
+              )}
+            </Pressable>
+          )}
         </View>
       )}
     </View>
@@ -163,4 +184,14 @@ const styles = StyleSheet.create({
   contentTitle: { color: "#6366f1", fontSize: 12, fontWeight: "600" },
   comment: { color: "#9ca3af", fontSize: 13, lineHeight: 20 },
   likeCount: { color: "#6b7280", fontSize: 12 },
+  loadMoreButton: {
+    alignItems: "center",
+    paddingVertical: 14,
+    marginHorizontal: 16,
+    marginTop: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#374151",
+  },
+  loadMoreText: { color: "#9ca3af", fontSize: 14 },
 });
