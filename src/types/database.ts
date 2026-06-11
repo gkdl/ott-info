@@ -30,6 +30,7 @@ export interface Database {
           avatar_url?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       reviews: {
@@ -63,6 +64,7 @@ export interface Database {
           comment?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       favorites: {
@@ -83,7 +85,8 @@ export interface Database {
           poster_path?: string | null;
           created_at?: string;
         };
-        Update: never;
+        Update: Record<string, never>;
+        Relationships: [];
       };
 
       review_likes: {
@@ -98,7 +101,8 @@ export interface Database {
           review_id: number;
           created_at?: string;
         };
-        Update: never;
+        Update: Record<string, never>;
+        Relationships: [];
       };
 
       reports: {
@@ -120,6 +124,7 @@ export interface Database {
         Update: {
           status?: "pending" | "reviewed" | "dismissed";
         };
+        Relationships: [];
       };
 
       blocks: {
@@ -134,7 +139,8 @@ export interface Database {
           blocked_user_id: string;
           created_at?: string;
         };
-        Update: never;
+        Update: Record<string, never>;
+        Relationships: [];
       };
     };
 

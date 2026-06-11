@@ -141,7 +141,7 @@ export async function fetchMyReviews(
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map((r) => ({ ...r, is_liked_by_me: false })) as ReviewWithProfile[];
+  return (data ?? []).map((r) => ({ ...r, is_liked_by_me: false })) as unknown as ReviewWithProfile[];
 }
 
 // ─── 좋아요 토글 ──────────────────────────────────────────────────────────────

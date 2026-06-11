@@ -41,9 +41,24 @@ export interface TmdbTv {
 
 export type TmdbContent = TmdbMovie | TmdbTv;
 
-export interface TmdbMultiResult extends Partial<TmdbMovie>, Partial<TmdbTv> {
+export interface TmdbMultiResult {
   id: number;
   media_type: "movie" | "tv" | "person";
+  // movie fields
+  title?: string;
+  original_title?: string;
+  release_date?: string;
+  // tv fields
+  name?: string;
+  original_name?: string;
+  first_air_date?: string;
+  // shared fields
+  overview?: string;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  vote_average?: number;
+  vote_count?: number;
+  genre_ids?: number[];
 }
 
 // ─── 상세 ─────────────────────────────────────────────────────────────────────
