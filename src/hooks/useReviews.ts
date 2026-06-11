@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
 import {
   fetchReviews,
@@ -188,11 +188,9 @@ export function useMyReviews(userId: string) {
 // ─── 답글 목록 ────────────────────────────────────────────────────────────────
 
 export function useReplies(reviewId: number, enabled: boolean) {
-  return useInfiniteQuery({
+  return useQuery({
     queryKey: reviewKeys.replies(reviewId),
     queryFn: () => fetchReplies(reviewId),
-    initialPageParam: 1,
-    getNextPageParam: () => undefined, // 답글은 전체 로드
     enabled,
     staleTime: 60 * 1000,
   });

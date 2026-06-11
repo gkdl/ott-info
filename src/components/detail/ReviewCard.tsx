@@ -51,7 +51,7 @@ export function ReviewCard({
 
   if (isBlocked) return null;
 
-  const allReplies = repliesQuery.data?.pages.flat() ?? [];
+  const allReplies = repliesQuery.data ?? [];
   const timeAgo = formatTimeAgo(review.created_at);
 
   function handleDelete() {

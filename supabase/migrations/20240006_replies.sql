@@ -6,7 +6,20 @@ ALTER TABLE reviews
   ADD COLUMN IF NOT EXISTS reply_count INTEGER NOT NULL DEFAULT 0;
 
 -- 2. rating CHECK 완화: 답글(parent_id IS NOT NULL)은 별점 불필요
-ALTER TABLE reviews DROP CONSTRAINT IF EXISTS reviews_rating_check;
+-- PostgreSQL은 이름 없는 CHECK에 자동으로 <table>_<col>_check 이름을 부여함.
+-- 20240001_schema.sql의 `CHECK (rating BETWEEN 1 AND 5)` → reviews_rating_check
+-- 이름이 다를 경우를 대비해 DO $$로 안전하게 처리.
+DO $$
+BEGIN
+  -- 이름이 있으면 삭제, 없으면 그냥 진행
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'reviews'::regclass AND conname = 'reviews_rating_check'
+  ) THEN
+    ALTER TABLE reviews DROP CONSTRAINT reviews_rating_check;
+  END IF;
+END$$;
+
 ALTER TABLE reviews ADD CONSTRAINT reviews_rating_check
   CHECK (parent_id IS NOT NULL OR (rating >= 1 AND rating <= 5));
 
