@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -123,8 +124,16 @@ function GridItem({
 
 // ─── 메인 화면 ────────────────────────────────────────────────────────────────
 
+const ITEM_MIN_WIDTH = 120;
+
 export default function BrowseScreen() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+
+  const numColumns = useMemo(
+    () => Math.max(3, Math.floor(width / ITEM_MIN_WIDTH)),
+    [width]
+  );
 
   const [mediaType, setMediaType] = useState<MediaType>("movie");
   const [selectedProvider, setSelectedProvider] = useState<OttProvider>(OTT_PROVIDERS[0]);
@@ -233,8 +242,9 @@ export default function BrowseScreen() {
       ) : (
         <FlatList
           data={items}
+          key={numColumns}
           keyExtractor={(item) => String(item.id)}
-          numColumns={3}
+          numColumns={numColumns}
           contentContainerStyle={styles.grid}
           columnWrapperStyle={styles.gridRow}
           onEndReached={() => hasNextPage && fetchNextPage()}
@@ -357,7 +367,6 @@ const styles = StyleSheet.create({
   gridItem: {
     flex: 1,
     gap: 6,
-    maxWidth: "33.33%" as unknown as number,
   },
   posterWrapper: {
     width: "100%",
