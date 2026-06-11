@@ -38,7 +38,8 @@ export function useTopRated(mediaType: MediaType = "movie") {
   return useQuery({
     queryKey: tmdbKeys.topRated(mediaType),
     queryFn: () => tmdbService.getTopRated(mediaType),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 60 * 60 * 1000, // top_rated는 하루에도 잘 안 바뀜
+    gcTime: 2 * 60 * 60 * 1000,
   });
 }
 
@@ -62,7 +63,8 @@ export function useGenreList(mediaType: MediaType = "movie") {
   return useQuery({
     queryKey: tmdbKeys.genreList(mediaType),
     queryFn: () => tmdbService.getGenreList(mediaType),
-    staleTime: 60 * 60 * 1000, // 장르 목록은 거의 안 바뀜
+    staleTime: Infinity, // 장르 목록은 변하지 않음
+    gcTime: Infinity,
   });
 }
 
@@ -80,7 +82,8 @@ export function useContentDetail(mediaType: MediaType, contentId: number) {
     queryKey: tmdbKeys.detail(mediaType, contentId),
     queryFn: () => tmdbService.getDetail(mediaType, contentId),
     enabled: contentId > 0,
-    staleTime: 15 * 60 * 1000,
+    staleTime: 60 * 60 * 1000, // 상세 정보는 거의 안 바뀜
+    gcTime: 2 * 60 * 60 * 1000,
   });
 }
 
@@ -89,7 +92,8 @@ export function useWatchProviders(mediaType: MediaType, contentId: number) {
     queryKey: tmdbKeys.watchProviders(mediaType, contentId),
     queryFn: () => tmdbService.getWatchProviders(mediaType, contentId),
     enabled: contentId > 0,
-    staleTime: 60 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000, // OTT 제공 정보는 하루 단위로 변경
+    gcTime: 24 * 60 * 60 * 1000,
   });
 }
 
