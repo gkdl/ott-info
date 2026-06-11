@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 // ─── 환경변수 ─────────────────────────────────────────────────────────────────
 // SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 는 Edge Function 배포 시
