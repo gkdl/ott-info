@@ -56,7 +56,7 @@ export function DetailHeader({
 
         {/* 뒤로 가기 */}
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/home")}
           style={[styles.backButton, { top: insets.top + 8 }]}
         >
           <Ionicons name="chevron-back" size={22} color="#fff" />
