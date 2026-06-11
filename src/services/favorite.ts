@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { FavoriteItem, InsertDto } from "@/types/database";
 import { PAGE_SIZE } from "./review";
+export { PAGE_SIZE };
 
 // ─── 즐겨찾기 토글 ────────────────────────────────────────────────────────────
 

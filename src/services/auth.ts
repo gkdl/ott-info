@@ -103,7 +103,7 @@ export async function signInWithKakao(): Promise<KakaoLoginResult> {
 
     // 5. 스토어 즉시 업데이트 (onAuthStateChange 전 선반영)
     useAuthStore.getState().setSession(sessionData.session);
-    useAuthStore.getState().setProfile({ ...profilePayload, updated_at: new Date().toISOString() });
+    useAuthStore.getState().setProfile({ ...profilePayload, avatar_url: profilePayload.avatar_url ?? null, updated_at: new Date().toISOString() });
 
     return { status: "success", isNewUser };
   } catch (err) {

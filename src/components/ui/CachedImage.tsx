@@ -1,6 +1,6 @@
 import React from "react";
 import { Image, type ImageProps, type ImageStyle } from "expo-image";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, type ViewStyle } from "react-native";
 
 // TMDB 이미지 베이스 URL 상수
 export const TMDB_IMAGE_BASE = {
@@ -39,7 +39,7 @@ export function CachedImage({
     return fallback ? (
       <>{fallback}</>
     ) : (
-      <View style={[styles.placeholder, style]} />
+      <View style={[styles.placeholder, style as ViewStyle]} />
     );
   }
 
@@ -74,7 +74,7 @@ export function PosterImage({ path, width, style }: PosterImageProps) {
     <CachedImage
       path={path}
       size="poster"
-      style={[{ width, height, borderRadius: 8 }, style]}
+      style={StyleSheet.flatten([{ width, height, borderRadius: 8 }, style]) as ImageStyle}
     />
   );
 }
@@ -92,7 +92,7 @@ export function BackdropImage({ path, height = 220, style }: BackdropImageProps)
     <CachedImage
       path={path}
       size="backdrop"
-      style={[{ width: "100%", height }, style]}
+      style={StyleSheet.flatten([{ width: "100%", height }, style]) as ImageStyle}
     />
   );
 }
@@ -110,7 +110,7 @@ export function OttLogo({ path, size = 44, style }: OttLogoProps) {
     <CachedImage
       path={path}
       size="logo"
-      style={[{ width: size, height: size, borderRadius: size / 8 }, style]}
+      style={StyleSheet.flatten([{ width: size, height: size, borderRadius: size / 8 }, style]) as ImageStyle}
     />
   );
 }
