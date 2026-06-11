@@ -10,6 +10,7 @@ type TmdbEndpoint =
   | "on_the_air"
   | "genre_list"
   | "discover"
+  | "discover_by_provider"
   | "detail"
   | "watch_providers"
   | "search";
@@ -158,6 +159,27 @@ async function handleWatchProviders(params: URLSearchParams): Promise<unknown> {
   };
 }
 
+async function handleDiscoverByProvider(params: URLSearchParams): Promise<unknown> {
+  const mediaType = params.get("media_type") === "tv" ? "tv" : "movie";
+  const providerId = params.get("provider_id");
+  const genreId = params.get("genre_id");
+
+  if (!providerId || !/^\d+$/.test(providerId)) throw new Error("provider_id is required and must be numeric");
+  if (genreId && !/^\d+$/.test(genreId)) throw new Error("genre_id must be numeric");
+
+  const extraParams: Record<string, string> = {
+    watch_region: "KR",
+    with_watch_providers: providerId,
+    sort_by: params.get("sort_by") || "popularity.desc",
+    page: params.get("page") || "1",
+    "vote_count.gte": "10",
+  };
+  if (genreId) extraParams.with_genres = genreId;
+
+  const res = await tmdbFetch(`/discover/${mediaType}`, extraParams);
+  return res.json();
+}
+
 async function handleSearch(params: URLSearchParams): Promise<unknown> {
   const query = params.get("query");
   if (!query || query.trim().length === 0) throw new Error("query is required");
@@ -282,7 +304,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       case "upcoming":       data = await handleUpcoming(params); break;
       case "now_playing":    data = await handleNowPlaying(params); break;
       case "genre_list":     data = await handleGenreList(params); break;
-      case "discover":       data = await handleDiscover(params); break;
+      case "discover":            data = await handleDiscover(params); break;
+      case "discover_by_provider": data = await handleDiscoverByProvider(params); break;
       case "detail":         data = await handleDetail(params); break;
       case "watch_providers":data = await handleWatchProviders(params); break;
       case "search":         data = await handleSearch(params); break;

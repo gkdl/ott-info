@@ -49,6 +49,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="browse"
+        options={{
+          title: "탐색",
+          tabBarIcon: tabIcon("tv-outline", "tv"),
+        }}
+      />
+      <Tabs.Screen
         name="mypage"
         options={{
           title: "마이",

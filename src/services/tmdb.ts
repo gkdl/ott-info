@@ -116,6 +116,22 @@ export const tmdbService = {
     });
   },
 
+  /** OTT 프로바이더별 콘텐츠 탐색 (KR Watch Provider + 선택적 장르 필터) */
+  discoverByProvider(
+    mediaType: MediaType = "movie",
+    providerId: number,
+    genreId?: number,
+    page = 1
+  ) {
+    return callProxy<TmdbPaginatedResult<TmdbContent>>({
+      endpoint: "discover_by_provider",
+      media_type: mediaType,
+      provider_id: String(providerId),
+      ...(genreId ? { genre_id: String(genreId) } : {}),
+      page: String(page),
+    });
+  },
+
   /** 통합 검색 */
   search(
     query: string,

@@ -3,6 +3,8 @@ import { tmdbService } from "@/services/tmdb";
 import type { MediaType } from "@/types/tmdb";
 
 export const tmdbKeys = {
+  browseByProvider: (mediaType: string, providerId: number, genreId: number) =>
+    ["tmdb", "browse_provider", mediaType, providerId, genreId] as const,
   trending: (mediaType: string, timeWindow: string) =>
     ["tmdb", "trending", mediaType, timeWindow] as const,
   topRated: (mediaType: string) => ["tmdb", "top_rated", mediaType] as const,
@@ -86,6 +88,28 @@ export function useWatchProviders(mediaType: MediaType, contentId: number) {
     queryFn: () => tmdbService.getWatchProviders(mediaType, contentId),
     enabled: contentId > 0,
     staleTime: 60 * 60 * 1000,
+  });
+}
+
+export function useBrowseByProvider(
+  mediaType: MediaType,
+  providerId: number,
+  genreId: number  // 0 = 전체
+) {
+  return useInfiniteQuery({
+    queryKey: tmdbKeys.browseByProvider(mediaType, providerId, genreId),
+    queryFn: ({ pageParam = 1 }) =>
+      tmdbService.discoverByProvider(
+        mediaType,
+        providerId,
+        genreId > 0 ? genreId : undefined,
+        pageParam as number
+      ),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.page < last.total_pages ? last.page + 1 : undefined,
+    enabled: providerId > 0,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
