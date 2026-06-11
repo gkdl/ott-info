@@ -116,6 +116,16 @@ export const tmdbService = {
     });
   },
 
+  /** 비슷한 콘텐츠 추천 */
+  getSimilar(mediaType: MediaType, contentId: number, page = 1) {
+    return callProxy<TmdbPaginatedResult<TmdbContent>>({
+      endpoint: "similar",
+      media_type: mediaType,
+      content_id: String(contentId),
+      page: String(page),
+    });
+  },
+
   /** OTT 프로바이더별 콘텐츠 탐색 (KR Watch Provider + 선택적 장르 필터) */
   discoverByProvider(
     mediaType: MediaType = "movie",

@@ -13,6 +13,7 @@ type TmdbEndpoint =
   | "discover_by_provider"
   | "detail"
   | "watch_providers"
+  | "similar"
   | "search";
 
 type MediaType = "movie" | "tv" | "all";
@@ -157,6 +158,18 @@ async function handleWatchProviders(params: URLSearchParams): Promise<unknown> {
     id: (data as Record<string, unknown>).id,
     results: { KR: data.results?.["KR"] ?? null },
   };
+}
+
+async function handleSimilar(params: URLSearchParams): Promise<unknown> {
+  const mediaType = params.get("media_type") === "tv" ? "tv" : "movie";
+  const contentId = params.get("content_id");
+
+  if (!contentId || !/^\d+$/.test(contentId)) throw new Error("content_id is required and must be numeric");
+
+  const res = await tmdbFetch(`/${mediaType}/${contentId}/recommendations`, {
+    page: params.get("page") || "1",
+  });
+  return res.json();
 }
 
 async function handleDiscoverByProvider(params: URLSearchParams): Promise<unknown> {
@@ -306,6 +319,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       case "genre_list":     data = await handleGenreList(params); break;
       case "discover":            data = await handleDiscover(params); break;
       case "discover_by_provider": data = await handleDiscoverByProvider(params); break;
+      case "similar":              data = await handleSimilar(params); break;
       case "detail":         data = await handleDetail(params); break;
       case "watch_providers":data = await handleWatchProviders(params); break;
       case "search":         data = await handleSearch(params); break;

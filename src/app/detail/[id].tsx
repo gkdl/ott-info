@@ -10,6 +10,8 @@ import Toast from "react-native-toast-message";
 import { DetailHeader, DetailHeaderSkeleton } from "@/components/detail/DetailHeader";
 import { OttProviders } from "@/components/detail/OttProviders";
 import { ReviewSection } from "@/components/detail/ReviewSection";
+import { SimilarContent } from "@/components/detail/SimilarContent";
+import { AdBanner } from "@/components/ui/AdBanner";
 import { ErrorView } from "@/components/shared/StateViews";
 import { useContentDetail } from "@/hooks/useTmdb";
 import { useFavoriteStatus, useFavoriteToggle } from "@/hooks/useFavorite";
@@ -102,9 +104,17 @@ export default function DetailScreen() {
             posterPath={detail.poster_path}
           />
 
-          <View style={{ height: 40 }} />
+          <View style={styles.divider} />
+
+          {/* 비슷한 콘텐츠 */}
+          <SimilarContent contentId={contentId} mediaType={mediaType} />
+
+          <View style={{ height: 24 }} />
         </View>
       </ScrollView>
+
+      {/* 하단 고정 광고 배너 */}
+      <AdBanner />
 
       {/* 토스트 (OTT 딥링크 실패 안내 등) */}
       <Toast />

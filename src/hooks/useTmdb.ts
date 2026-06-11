@@ -3,6 +3,8 @@ import { tmdbService } from "@/services/tmdb";
 import type { MediaType } from "@/types/tmdb";
 
 export const tmdbKeys = {
+  similar: (mediaType: string, contentId: number) =>
+    ["tmdb", "similar", mediaType, contentId] as const,
   browseByProvider: (mediaType: string, providerId: number, genreId: number) =>
     ["tmdb", "browse_provider", mediaType, providerId, genreId] as const,
   trending: (mediaType: string, timeWindow: string) =>
@@ -88,6 +90,15 @@ export function useWatchProviders(mediaType: MediaType, contentId: number) {
     queryFn: () => tmdbService.getWatchProviders(mediaType, contentId),
     enabled: contentId > 0,
     staleTime: 60 * 60 * 1000,
+  });
+}
+
+export function useSimilar(mediaType: MediaType, contentId: number) {
+  return useQuery({
+    queryKey: tmdbKeys.similar(mediaType, contentId),
+    queryFn: () => tmdbService.getSimilar(mediaType, contentId),
+    enabled: contentId > 0,
+    staleTime: 10 * 60 * 1000,
   });
 }
 
