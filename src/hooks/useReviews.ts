@@ -8,10 +8,13 @@ import {
   toggleLike,
   fetchMyReviews,
   fetchCommunityFeed,
+  fetchReplies,
+  createReply,
   PAGE_SIZE,
   type ReviewSort,
   type CreateReviewInput,
   type UpdateReviewInput,
+  type CreateReplyInput,
 } from "@/services/review";
 import { useCurrentUser } from "@/store/authStore";
 import type { ReviewWithProfile } from "@/types/database";
@@ -22,6 +25,7 @@ export const reviewKeys = {
   all: ["reviews"] as const,
   list: (contentId: string, contentType: string, sort: ReviewSort) =>
     ["reviews", "list", contentId, contentType, sort] as const,
+  replies: (reviewId: number) => ["reviews", "replies", reviewId] as const,
   myReviews: (userId: string) => ["reviews", "mine", userId] as const,
   communityFeed: () => ["reviews", "community-feed"] as const,
 };
@@ -178,6 +182,37 @@ export function useMyReviews(userId: string) {
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length === PAGE_SIZE ? allPages.length + 1 : undefined,
     enabled: !!userId,
+  });
+}
+
+// ─── 답글 목록 ────────────────────────────────────────────────────────────────
+
+export function useReplies(reviewId: number, enabled: boolean) {
+  return useInfiniteQuery({
+    queryKey: reviewKeys.replies(reviewId),
+    queryFn: () => fetchReplies(reviewId),
+    initialPageParam: 1,
+    getNextPageParam: () => undefined, // 답글은 전체 로드
+    enabled,
+    staleTime: 60 * 1000,
+  });
+}
+
+// ─── 답글 작성 ────────────────────────────────────────────────────────────────
+
+export function useCreateReply(parentId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateReplyInput) => createReply(input),
+    onSuccess: () => {
+      // 해당 리뷰의 답글 캐시 무효화 + 부모 리뷰 reply_count 갱신
+      queryClient.invalidateQueries({ queryKey: reviewKeys.replies(parentId) });
+      queryClient.invalidateQueries({ queryKey: reviewKeys.all });
+    },
+    onError: (err: Error) => {
+      Alert.alert("답글 작성 실패", err.message);
+    },
   });
 }
 

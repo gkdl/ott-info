@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { filterContent, FILTER_MESSAGES } from "@/lib/contentFilter";
-import type { InsertDto, UpdateDto, ReviewWithProfile } from "@/types/database";
+import type { InsertDto, UpdateDto, ReviewWithProfile, ReplyWithProfile } from "@/types/database";
 
 // ─── 상수 ─────────────────────────────────────────────────────────────────────
 
@@ -142,6 +142,52 @@ export async function fetchMyReviews(
 
   if (error) throw new Error(error.message);
   return (data ?? []).map((r) => ({ ...r, is_liked_by_me: false })) as unknown as ReviewWithProfile[];
+}
+
+// ─── 답글 조회 ────────────────────────────────────────────────────────────────
+
+export async function fetchReplies(reviewId: number): Promise<ReplyWithProfile[]> {
+  const { data, error } = await supabase.rpc("get_replies_excluding_blocked", {
+    p_review_id: reviewId,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ReplyWithProfile[];
+}
+
+// ─── 답글 작성 ────────────────────────────────────────────────────────────────
+
+export interface CreateReplyInput {
+  userId: string;
+  parentId: number;
+  contentId: string;
+  contentType: "movie" | "tv";
+  contentTitle: string;
+  posterPath: string | null;
+  comment: string;
+}
+
+export async function createReply(input: CreateReplyInput): Promise<void> {
+  const filterResult = filterContent(input.comment);
+  if (!filterResult.passed) {
+    throw new Error(FILTER_MESSAGES[filterResult.reason!]);
+  }
+  if (input.comment.length > 1000) {
+    throw new Error("답글은 1000자 이내로 작성해주세요.");
+  }
+
+  const payload: InsertDto<"reviews"> = {
+    user_id: input.userId,
+    parent_id: input.parentId,
+    content_id: input.contentId,
+    content_type: input.contentType,
+    content_title: input.contentTitle,
+    poster_path: input.posterPath,
+    rating: 0,
+    comment: input.comment,
+  };
+
+  const { error } = await supabase.from("reviews").insert(payload);
+  if (error) throw new Error(error.message);
 }
 
 // ─── 좋아요 토글 ──────────────────────────────────────────────────────────────

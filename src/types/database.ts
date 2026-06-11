@@ -41,9 +41,12 @@ export interface Database {
           content_type: "movie" | "tv";
           content_title: string;
           poster_path: string | null;
-          rating: number;          // 1~5 CHECK
+          rating: number;          // 1~5 (답글은 0)
           comment: string;         // 최대 1000자 CHECK
           like_count: number;
+          reply_count: number;
+          parent_id: number | null; // FK → reviews.id (답글이면 설정)
+          is_hidden: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -56,6 +59,9 @@ export interface Database {
           rating: number;
           comment: string;
           like_count?: number;
+          reply_count?: number;
+          parent_id?: number | null;
+          is_hidden?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -177,6 +183,19 @@ export interface Database {
           }
         >;
       };
+
+      get_replies_excluding_blocked: {
+        Args: { p_review_id: number };
+        Returns: Array<
+          Database["public"]["Tables"]["reviews"]["Row"] & {
+            profile: Pick<
+              Database["public"]["Tables"]["profiles"]["Row"],
+              "nickname" | "avatar_url"
+            >;
+            is_liked_by_me: boolean;
+          }
+        >;
+      };
     };
 
     Enums: Record<string, never>;
@@ -203,5 +222,7 @@ export type ReviewWithProfile = Tables<"reviews"> & {
   profile: Pick<Tables<"profiles">, "nickname" | "avatar_url">;
   is_liked_by_me: boolean;
 };
+
+export type ReplyWithProfile = ReviewWithProfile;
 
 export type FavoriteItem = Tables<"favorites">;
