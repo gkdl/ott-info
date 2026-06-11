@@ -1,21 +1,42 @@
 import { useEffect } from "react";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { AppProviders } from "@/lib/AppProviders";
+import { useAuthStatus } from "@/store/authStore";
 import "../globals.css";
 
 SplashScreen.preventAutoHideAsync();
 
+function AuthGuard() {
+  const status = useAuthStatus();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    const inAuthGroup = segments[0] === "login";
+
+    if (status === "unauthenticated" && !inAuthGroup) {
+      router.replace("/login");
+    } else if (status === "authenticated" && inAuthGroup) {
+      router.replace("/(tabs)/home");
+    }
+  }, [status, segments]);
+
+  return null;
+}
+
 export default function RootLayout() {
   useEffect(() => {
-    // 폰트나 초기 리소스 로드 완료 후 스플래시 숨김
     SplashScreen.hideAsync();
   }, []);
 
   return (
     <AppProviders>
       <StatusBar style="light" />
+      <AuthGuard />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
@@ -29,7 +50,6 @@ export default function RootLayout() {
           name="login"
           options={{
             animation: "fade",
-            presentation: "modal",
           }}
         />
       </Stack>
