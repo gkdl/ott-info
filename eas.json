@@ -2,6 +2,11 @@
   "cli": {
     "version": ">= 10.0.0"
   },
+  "update": {
+    "production": {
+      "branch": "production"
+    }
+  },
   "build": {
     "development": {
       "developmentClient": true,
