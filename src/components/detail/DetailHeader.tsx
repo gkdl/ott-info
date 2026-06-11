@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { BackdropImage, PosterImage } from "@/components/ui/CachedImage";
 import { SkeletonBox } from "@/components/shared/Skeleton";
 import type { TmdbMovieDetail, TmdbTvDetail } from "@/types/tmdb";
@@ -58,7 +59,7 @@ export function DetailHeader({
           onPress={() => router.back()}
           style={[styles.backButton, { top: insets.top + 8 }]}
         >
-          <Text style={styles.backIcon}>‹</Text>
+          <Ionicons name="chevron-back" size={22} color="#fff" />
         </Pressable>
       </View>
 
@@ -148,7 +149,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  backIcon: { color: "#fff", fontSize: 28, lineHeight: 36 },
   infoRow: {
     flexDirection: "row",
     gap: 16,

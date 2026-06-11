@@ -11,6 +11,7 @@ interface ContentCarouselProps {
   title: string;
   query: UseQueryResult<TmdbPaginatedResult<TmdbContent>>;
   defaultMediaType?: "movie" | "tv";
+  showRank?: boolean;
 }
 
 function getItemInfo(item: TmdbContent, defaultMediaType: "movie" | "tv") {
@@ -26,6 +27,7 @@ export function ContentCarousel({
   title,
   query,
   defaultMediaType = "movie",
+  showRank = false,
 }: ContentCarouselProps) {
   const router = useRouter();
   const { data, isLoading, isError, refetch } = query;
@@ -49,13 +51,16 @@ export function ContentCarousel({
         keyExtractor={(item) => String(item.id)}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.list}
-        ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
-        renderItem={({ item }) => {
+        // 순위 표시 시 숫자가 포스터 밖으로 삐져나오므로 좌측 여백 조정
+        contentContainerStyle={[styles.list, showRank && styles.listWithRank]}
+        ItemSeparatorComponent={() => (
+          <View style={{ width: showRank ? 4 : 12 }} />
+        )}
+        renderItem={({ item, index }) => {
           const { title: itemTitle, mediaType } = getItemInfo(item, defaultMediaType);
           return (
             <Pressable
-              style={styles.card}
+              style={[styles.card, showRank && styles.cardWithRank]}
               onPress={() =>
                 router.push({
                   pathname: "/detail/[id]",
@@ -63,13 +68,20 @@ export function ContentCarousel({
                 })
               }
             >
-              <PosterImage path={item.poster_path} width={120} />
+              {/* 포스터 + 순위 숫자 */}
+              <View style={styles.posterWrapper}>
+                <PosterImage path={item.poster_path} width={showRank ? 100 : 120} />
+                {showRank && (
+                  <Text style={styles.rank}>{index + 1}</Text>
+                )}
+              </View>
+
               <Text style={styles.cardTitle} numberOfLines={2}>
                 {itemTitle}
               </Text>
               {item.vote_average > 0 && (
                 <Text style={styles.cardRating}>
-                  ⭐ {item.vote_average.toFixed(1)}
+                  ★ {item.vote_average.toFixed(1)}
                 </Text>
               )}
             </Pressable>
@@ -89,7 +101,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   list: { paddingHorizontal: 16 },
+  listWithRank: { paddingHorizontal: 16, paddingBottom: 4 },
   card: { width: 120, gap: 6 },
+  cardWithRank: { width: 116 },
+  posterWrapper: { position: "relative" },
+  rank: {
+    position: "absolute",
+    bottom: -8,
+    left: -10,
+    fontSize: 56,
+    fontWeight: "900",
+    color: "#fff",
+    // 윤곽선 효과: 검정 테두리로 가독성 확보
+    textShadowColor: "#000",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
+    lineHeight: 56,
+    letterSpacing: -4,
+  },
   cardTitle: { color: "#e5e7eb", fontSize: 12, lineHeight: 16 },
-  cardRating: { color: "#9ca3af", fontSize: 11 },
+  cardRating: { color: "#fbbf24", fontSize: 11, fontWeight: "600" },
 });

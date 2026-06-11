@@ -1,13 +1,19 @@
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import type { ColorValue } from "react-native";
 
-function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
-  return (
-    <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{icon}</Text>
+type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+
+function tabIcon(name: IoniconsName, activeName: IoniconsName) {
+  return ({ focused, color }: { focused: boolean; color: ColorValue }) => (
+    <Ionicons name={focused ? activeName : name} size={24} color={color as string} />
   );
 }
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -16,8 +22,8 @@ export default function TabsLayout() {
           backgroundColor: "#0f172a",
           borderTopColor: "#1f2937",
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
+          height: 56 + insets.bottom,
+          paddingBottom: insets.bottom,
         },
         tabBarActiveTintColor: "#6366f1",
         tabBarInactiveTintColor: "#6b7280",
@@ -32,27 +38,21 @@ export default function TabsLayout() {
         name="home"
         options={{
           title: "홈",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon="🏠" focused={focused} />
-          ),
+          tabBarIcon: tabIcon("home-outline", "home"),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: "검색",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon="🔍" focused={focused} />
-          ),
+          tabBarIcon: tabIcon("search-outline", "search"),
         }}
       />
       <Tabs.Screen
         name="mypage"
         options={{
           title: "마이",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon icon="👤" focused={focused} />
-          ),
+          tabBarIcon: tabIcon("person-outline", "person"),
         }}
       />
     </Tabs>

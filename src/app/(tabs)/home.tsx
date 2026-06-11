@@ -77,15 +77,17 @@ export default function HomeScreen() {
             title="🔥 지금 뜨는 콘텐츠"
             query={trendingQuery}
             defaultMediaType="movie"
+            showRank
           />
 
           <Divider />
 
           {/* Top Rated */}
           <ContentCarousel
-            title="⭐ 역대 명작"
+            title="★ 역대 명작"
             query={topRatedQuery}
             defaultMediaType="movie"
+            showRank
           />
 
           <Divider />
