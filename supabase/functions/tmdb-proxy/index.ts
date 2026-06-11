@@ -235,37 +235,28 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  // ── 1. JWT 검증 ─────────────────────────────────────────────────────────────
+  // ── 1. JWT 검증 (선택적) ────────────────────────────────────────────────────
+  // 공개 엔드포인트(trending, top_rated 등)는 비로그인도 허용.
+  // 로그인 상태면 유저 ID 기반 rate limit 적용, 비로그인이면 IP 기반으로만 제한.
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Missing authorization token" }), {
-      status: 401,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-    });
-  }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
-  // createClient에 JWT를 넘겨 토큰 유효성 검증
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  let userId: string | null = null;
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
-      status: 401,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  if (authHeader?.startsWith("Bearer ")) {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
     });
+    const { data: { user } } = await supabase.auth.getUser();
+    userId = user?.id ?? null;
   }
 
   // ── 2. Rate Limiting ─────────────────────────────────────────────────────────
-  const userId = user.id;
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
-  if (!checkRateLimit(`user:${userId}`, RATE_LIMIT.MAX_REQUESTS)) {
+  if (userId && !checkRateLimit(`user:${userId}`, RATE_LIMIT.MAX_REQUESTS)) {
     return new Response(JSON.stringify({ error: "Too many requests. Please slow down." }), {
       status: 429,
       headers: {
