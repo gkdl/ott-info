@@ -71,7 +71,7 @@ export function EulaModal({ visible, onAgree, onDecline }: EulaModalProps) {
             <Text style={styles.body}>
               카카오 로그인을 통해 닉네임, 프로필 이미지를 수집합니다.
               수집된 정보는 서비스 제공 목적 외에 사용되지 않습니다.
-              개인정보 처리방침은 앱 설정 > 개인정보 처리방침에서 확인할 수 있습니다.{"\n"}
+              개인정보 처리방침은 앱 설정 {">"} 개인정보 처리방침에서 확인할 수 있습니다.{"\n"}
             </Text>
 
             <Text style={styles.sectionTitle}>계정 삭제</Text>
