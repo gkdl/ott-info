@@ -1,4 +1,7 @@
 -- get_community_feed_excluding_blocked에 p_offset 파라미터 추가
+-- 파라미터 시그니처 변경이므로 기존 함수 DROP 후 재생성
+DROP FUNCTION IF EXISTS get_community_feed_excluding_blocked(INTEGER);
+DROP FUNCTION IF EXISTS get_community_feed_excluding_blocked(INTEGER, INTEGER);
 CREATE OR REPLACE FUNCTION get_community_feed_excluding_blocked(
   p_limit  INTEGER,
   p_offset INTEGER DEFAULT 0

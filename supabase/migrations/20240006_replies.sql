@@ -46,6 +46,8 @@ AFTER INSERT OR DELETE ON reviews
 FOR EACH ROW EXECUTE FUNCTION update_review_reply_count();
 
 -- 5. 기존 get_reviews_excluding_blocked RPC — 최상위 리뷰만 반환하도록 수정
+-- 반환 타입이 변경되므로 DROP 후 재생성
+DROP FUNCTION IF EXISTS get_reviews_excluding_blocked(TEXT, TEXT, TEXT, INTEGER, INTEGER);
 CREATE OR REPLACE FUNCTION get_reviews_excluding_blocked(
   p_content_id   TEXT,
   p_content_type TEXT,
@@ -105,6 +107,7 @@ END;
 $$;
 
 -- 6. 기존 커뮤니티 피드 RPC — reply_count 컬럼 추가
+DROP FUNCTION IF EXISTS get_community_feed_excluding_blocked(INTEGER);
 CREATE OR REPLACE FUNCTION get_community_feed_excluding_blocked(
   p_limit INTEGER
 )
