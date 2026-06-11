@@ -298,6 +298,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     gap: 8,
     flexDirection: "row",
+    flexWrap: "nowrap",
   },
   ottChip: {
     paddingHorizontal: 14,
@@ -317,6 +318,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     gap: 8,
     flexDirection: "row",
+    flexWrap: "nowrap",
   },
   genreChip: {
     paddingHorizontal: 12,
