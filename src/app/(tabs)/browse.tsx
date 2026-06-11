@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { PosterImage } from "@/components/ui/CachedImage";
+import { CachedImage } from "@/components/ui/CachedImage";
 import { EmptyView, SectionError } from "@/components/shared/StateViews";
 import { useBrowseByProvider } from "@/hooks/useTmdb";
 import { useGenreList } from "@/hooks/useTmdb";
@@ -108,7 +108,9 @@ function GridItem({
         })
       }
     >
-      <PosterImage path={item.poster_path} width={ITEM_W} />
+      <View style={styles.posterWrapper}>
+        <CachedImage path={item.poster_path} size="poster" style={styles.posterFill} />
+      </View>
       <Text style={styles.gridTitle} numberOfLines={2}>
         {title}
       </Text>
@@ -250,8 +252,6 @@ export default function BrowseScreen() {
   );
 }
 
-const ITEM_W = 104;
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#030712" },
 
@@ -342,16 +342,28 @@ const styles = StyleSheet.create({
   // 그리드
   loader: { marginTop: 60 },
   grid: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingBottom: 20,
   },
   gridRow: {
-    justifyContent: "space-between",
-    marginBottom: 20,
+    gap: 8,
+    marginBottom: 16,
   },
   gridItem: {
-    width: ITEM_W,
+    flex: 1,
     gap: 6,
+    maxWidth: "33.33%" as unknown as number,
+  },
+  posterWrapper: {
+    width: "100%",
+    aspectRatio: 2 / 3,
+    borderRadius: 8,
+    overflow: "hidden",
+    backgroundColor: "#111827",
+  },
+  posterFill: {
+    width: "100%" as unknown as number,
+    height: "100%" as unknown as number,
   },
   gridTitle: {
     color: "#e5e7eb",
