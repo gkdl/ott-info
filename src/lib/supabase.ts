@@ -1,20 +1,18 @@
 import "react-native-url-polyfill/auto";
 import { createClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import type { Database } from "@/types/database";
 
-// ─── expo-secure-store 어댑터 ─────────────────────────────────────────────────
-// Supabase 클라이언트의 storage 인터페이스를 SecureStore로 구현.
-// AsyncStorage 평문 저장 대신 OS 키체인/키스토어에 세션 토큰을 암호화 저장.
-//
-// 주의: SecureStore 값은 2048바이트 제한이 있어 큰 JWT를 키 단위로 분할 저장.
+// ─── 스토리지 어댑터 ──────────────────────────────────────────────────────────
+// 웹: localStorage, 네이티브: SecureStore (OS 키체인/키스토어)
+// SecureStore는 2048바이트 제한이 있어 큰 JWT를 청크로 분할 저장.
 
-const CHUNK_SIZE = 2000; // 바이트 단위 분할 크기
+const CHUNK_SIZE = 2000;
 
 const secureStoreAdapter = {
   async getItem(key: string): Promise<string | null> {
     try {
-      // 청크 분할 저장 여부 확인
       const chunkCount = await SecureStore.getItemAsync(`${key}_chunks`);
       if (chunkCount) {
         const count = parseInt(chunkCount, 10);
@@ -38,7 +36,6 @@ const secureStoreAdapter = {
         await SecureStore.setItemAsync(key, value);
         return;
       }
-      // 2048바이트 초과 시 청크 분할
       const chunks: string[] = [];
       for (let i = 0; i < value.length; i += CHUNK_SIZE) {
         chunks.push(value.slice(i, i + CHUNK_SIZE));
@@ -70,6 +67,20 @@ const secureStoreAdapter = {
   },
 };
 
+const localStorageAdapter = {
+  getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
+  setItem: (key: string, value: string) => {
+    localStorage.setItem(key, value);
+    return Promise.resolve();
+  },
+  removeItem: (key: string) => {
+    localStorage.removeItem(key);
+    return Promise.resolve();
+  },
+};
+
+const storageAdapter = Platform.OS === "web" ? localStorageAdapter : secureStoreAdapter;
+
 // ─── Supabase 클라이언트 ──────────────────────────────────────────────────────
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
@@ -83,9 +94,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: secureStoreAdapter,
+    storage: storageAdapter,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // React Native에서는 false
+    detectSessionInUrl: false,
   },
 });
