@@ -55,6 +55,12 @@ export function ReviewCard({
   const timeAgo = formatTimeAgo(review.created_at);
 
   function handleDelete() {
+    if (Platform.OS === "web") {
+      if (window.confirm("이 리뷰를 삭제하시겠습니까?")) {
+        deleteMutation.mutate(review.id);
+      }
+      return;
+    }
     Alert.alert("리뷰 삭제", "이 리뷰를 삭제하시겠습니까?", [
       { text: "취소", style: "cancel" },
       {

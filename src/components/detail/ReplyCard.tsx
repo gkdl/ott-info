@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
+import { View, Text, Pressable, StyleSheet, Alert, Platform } from "react-native";
 import { Image } from "expo-image";
 import { useDeleteReview, useLikeToggle } from "@/hooks/useReviews";
 import { useBlockStore } from "@/store/blockStore";
@@ -24,6 +24,12 @@ export function ReplyCard({ reply, contentId, contentType, sort }: ReplyCardProp
   if (isBlocked) return null;
 
   function handleDelete() {
+    if (Platform.OS === "web") {
+      if (window.confirm("이 답글을 삭제하시겠습니까?")) {
+        deleteMutation.mutate(reply.id);
+      }
+      return;
+    }
     Alert.alert("답글 삭제", "이 답글을 삭제하시겠습니까?", [
       { text: "취소", style: "cancel" },
       {
