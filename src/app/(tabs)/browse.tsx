@@ -219,6 +219,7 @@ export default function BrowseScreen() {
       </ScrollView>
 
       {/* ── 콘텐츠 결과 ──────────────────────────────────────────────── */}
+      <View style={styles.listContainer}>
       {isLoading ? (
         <ActivityIndicator color="#6366f1" style={styles.loader} />
       ) : isError ? (
@@ -248,6 +249,7 @@ export default function BrowseScreen() {
           )}
         />
       )}
+      </View>
     </View>
   );
 }
@@ -292,7 +294,7 @@ const styles = StyleSheet.create({
   },
 
   // OTT 칩
-  ottScroll: { flexGrow: 0 },
+  ottScroll: { flexGrow: 0, flexShrink: 0, minHeight: 44 },
   ottRow: {
     paddingHorizontal: 16,
     paddingBottom: 8,
@@ -312,7 +314,7 @@ const styles = StyleSheet.create({
   },
 
   // 장르 칩
-  genreScroll: { flexGrow: 0 },
+  genreScroll: { flexGrow: 0, flexShrink: 0, minHeight: 44 },
   genreRow: {
     paddingHorizontal: 16,
     paddingBottom: 12,
@@ -342,6 +344,7 @@ const styles = StyleSheet.create({
   },
 
   // 그리드
+  listContainer: { flex: 1 },
   loader: { marginTop: 60 },
   grid: {
     paddingHorizontal: 8,
