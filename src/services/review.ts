@@ -211,9 +211,8 @@ export async function toggleLike(
     // 좋아요 추가 — (user_id, review_id) unique 제약으로 중복 방지
     const { error } = await supabase
       .from("review_likes")
-      .insert({ user_id: userId, review_id: reviewId });
-    // 이미 좋아요한 경우 unique violation → 멱등 처리
-    if (error && error.code !== "23505") throw new Error(error.message);
+      .upsert({ user_id: userId, review_id: reviewId }, { onConflict: "user_id,review_id", ignoreDuplicates: true });
+    if (error) throw new Error(error.message);
   }
 }
 
