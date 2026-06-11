@@ -19,6 +19,7 @@ yarn-error.*
 ## Supabase
 supabase/.branches/
 supabase/.temp/
+supabase/functions/.env
 
 ## OS
 .DS_Store
