@@ -78,7 +78,7 @@ export function DetailHeader({
               <Text style={styles.badge}>{runtime}</Text>
             )}
             <Text style={[styles.badge, styles.ratingBadge]}>
-              ⭐ {detail.vote_average.toFixed(1)}
+              ★ {detail.vote_average.toFixed(1)}
             </Text>
           </View>
 

@@ -23,7 +23,6 @@ export default function HomeScreen() {
   const queryClient = useQueryClient();
   const { isOnline } = useNetworkState();
 
-  // 각 섹션 쿼리 (ContentCarousel에 query 객체 그대로 전달)
   const trendingQuery   = useTrending("all", "week");
   const topRatedQuery   = useTopRated("movie");
   const upcomingQuery   = useUpcoming("movie");
@@ -47,6 +46,12 @@ export default function HomeScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
+      {/* 앱 타이틀 헤더 */}
+      <View style={styles.appHeader}>
+        <Text style={styles.appLogo}>▶</Text>
+        <Text style={styles.appTitle}>OTT<Text style={styles.appTitleAccent}>INFO</Text></Text>
+      </View>
+
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -59,20 +64,16 @@ export default function HomeScreen() {
           />
         }
       >
-        {/* 오프라인 배너 */}
         {!isOnline && (
           <View style={styles.offlineBannerWrapper}>
             <OfflineBanner />
           </View>
         )}
 
-        {/* 히어로 배너 — 오프셋 없이 최상단 */}
         <HeroBanner />
 
-        {/* 섹션 간격 컨테이너 */}
         <View style={styles.sections}>
 
-          {/* 트렌딩 */}
           <ContentCarousel
             title="🔥 지금 뜨는 콘텐츠"
             query={trendingQuery}
@@ -80,9 +81,6 @@ export default function HomeScreen() {
             showRank
           />
 
-          <Divider />
-
-          {/* Top Rated */}
           <ContentCarousel
             title="★ 역대 명작"
             query={topRatedQuery}
@@ -90,35 +88,22 @@ export default function HomeScreen() {
             showRank
           />
 
-          <Divider />
-
-          {/* 개봉 예정 */}
           <ContentCarousel
             title="🎟 개봉 예정작"
             query={upcomingQuery}
             defaultMediaType="movie"
           />
 
-          <Divider />
-
-          {/* 현재 방영 중 TV */}
           <ContentCarousel
             title="📺 지금 방영 중"
             query={nowPlayingQuery}
             defaultMediaType="tv"
           />
 
-          <Divider />
-
-          {/* 장르별 큐레이션 */}
           <GenreSection />
 
-          <Divider />
-
-          {/* 커뮤니티 피드 */}
           <CommunityFeed />
 
-          {/* 하단 여백 */}
           <View style={{ height: 32 }} />
         </View>
       </ScrollView>
@@ -126,18 +111,30 @@ export default function HomeScreen() {
   );
 }
 
-function Divider() {
-  return <View style={styles.divider} />;
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#030712" },
+  appHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  appLogo: {
+    fontSize: 18,
+    color: "#6366f1",
+    fontWeight: "900",
+  },
+  appTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#f9fafb",
+    letterSpacing: 0.5,
+  },
+  appTitleAccent: {
+    color: "#6366f1",
+  },
   scroll: { flex: 1 },
   offlineBannerWrapper: { paddingTop: 8 },
-  sections: { gap: 28, paddingTop: 24 },
-  divider: {
-    height: 1,
-    marginHorizontal: 16,
-    backgroundColor: "#1f2937",
-  },
+  sections: { gap: 32, paddingTop: 24, paddingBottom: 8 },
 });

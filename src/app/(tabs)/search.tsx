@@ -69,7 +69,7 @@ export default function SearchScreen() {
           </Text>
           {(item.vote_average ?? 0) > 0 && (
             <Text style={styles.resultRating}>
-              ⭐ {item.vote_average!.toFixed(1)}
+              ★ {item.vote_average!.toFixed(1)}
             </Text>
           )}
         </View>
