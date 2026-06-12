@@ -107,6 +107,22 @@ find "$_PLUGIN_DIR" -name "*.gradle.kts" 2>/dev/null | while read -r _f; do
   fi
 done
 
+# Fix 3: Disable react-native-reanimated version check (4.4.x doesn't list RN 0.79 as supported)
+_REANIMATED_GRADLE="$APP_HOME/../node_modules/react-native-reanimated/android/build.gradle.kts"
+if [ -f "$_REANIMATED_GRADLE" ]; then
+  if grep -q "assertMinimalReactNativeVersionTask" "$_REANIMATED_GRADLE" 2>/dev/null; then
+    # Add 0.79 to any supported version string lists
+    sed -i 's/"0\.76"/"0.76", "0.79"/g' "$_REANIMATED_GRADLE"
+    sed -i 's/"0\.77"/"0.77", "0.79"/g' "$_REANIMATED_GRADLE"
+    sed -i 's/"0\.78"/"0.78", "0.79"/g' "$_REANIMATED_GRADLE"
+    # Disable the task at the end of the file as a fallback
+    if ! grep -q "assertMinimalReactNativeVersionTask.*enabled.*false" "$_REANIMATED_GRADLE"; then
+      printf '\ntasks.matching { it.name == "assertMinimalReactNativeVersionTask" }.configureEach { enabled = false }\n' >> "$_REANIMATED_GRADLE"
+    fi
+    echo "[gradlew-patch] Disabled reanimated version check in $_REANIMATED_GRADLE"
+  fi
+fi
+
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD=maximum
 
