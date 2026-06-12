@@ -1,29 +1,32 @@
 #!/bin/bash
 set -e
 
-echo "[patch] Looking for gradle-wrapper.properties in react-native template..."
+echo "[patch] Starting @react-native/gradle-plugin patches..."
 
-# expo prebuild copies this template file to android/gradle/wrapper/gradle-wrapper.properties
-# Patching it here (before prebuild runs) ensures the correct Gradle version is used
-TEMPLATE_WRAPPER="node_modules/react-native/template/android/gradle/wrapper/gradle-wrapper.properties"
-
-if [ -f "$TEMPLATE_WRAPPER" ]; then
-  echo "[patch] Found: $TEMPLATE_WRAPPER"
-  echo "[patch] Before:"
-  cat "$TEMPLATE_WRAPPER"
-  sed -i 's|gradle-[0-9][0-9.]*-bin\.zip|gradle-8.13-bin.zip|g' "$TEMPLATE_WRAPPER"
-  sed -i 's|gradle-[0-9][0-9.]*-all\.zip|gradle-8.13-bin.zip|g' "$TEMPLATE_WRAPPER"
-  echo "[patch] After:"
-  cat "$TEMPLATE_WRAPPER"
+# Fix 1: KOTLIN_1_7 is unsupported in KGP 2.0+
+# Change apiVersion from 1.7 to 1.8 in the react-native-gradle-plugin
+TARGET="node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build.gradle.kts"
+if [ -f "$TARGET" ]; then
+  echo "[patch] Patching KOTLIN_1_7 -> KOTLIN_1_8 in $TARGET"
+  sed -i 's/KotlinVersion\.KOTLIN_1_7/KotlinVersion.KOTLIN_1_8/g' "$TARGET"
+  echo "[patch] Result:"
+  grep -n "KOTLIN_1" "$TARGET" || echo "[patch] (no KOTLIN_ lines found)"
 else
-  echo "[patch] Template not found at expected path, searching..."
-  find node_modules/react-native -name "gradle-wrapper.properties" 2>/dev/null | while read -r f; do
-    echo "[patch] Found: $f"
-    sed -i 's|gradle-[0-9][0-9.]*-bin\.zip|gradle-8.13-bin.zip|g' "$f"
-    sed -i 's|gradle-[0-9][0-9.]*-all\.zip|gradle-8.13-bin.zip|g' "$f"
-    echo "[patch] Patched: $f"
-    cat "$f"
+  echo "[patch] WARNING: $TARGET not found"
+  find node_modules/@react-native/gradle-plugin -name "*.gradle.kts" 2>/dev/null | while read -r f; do
+    if grep -q "KOTLIN_1_7" "$f"; then
+      echo "[patch] Patching: $f"
+      sed -i 's/KotlinVersion\.KOTLIN_1_7/KotlinVersion.KOTLIN_1_8/g' "$f"
+    fi
   done
 fi
+
+# Fix 2: Patch any remaining 2.0.x kotlin version references
+find node_modules/@react-native/gradle-plugin \( -name "*.gradle.kts" -o -name "*.toml" -o -name "*.properties" \) 2>/dev/null | while read -r f; do
+  if grep -q "2\.0\." "$f" 2>/dev/null; then
+    echo "[patch] Patching kotlin 2.0.x -> 2.2.21 in: $f"
+    sed -i 's/2\.0\.[0-9][0-9]*/2.2.21/g' "$f"
+  fi
+done
 
 echo "[patch] Done"
