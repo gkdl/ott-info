@@ -88,6 +88,13 @@ APP_BASE_NAME=${0##*/}
 # Discard cd standard output in case $CDPATH is set (https://github.com/gradle/gradle/issues/25036)
 APP_HOME=$( cd -P "${APP_HOME:-./}" > /dev/null && printf '%s\n' "$PWD" ) || exit
 
+# Patch @react-native/gradle-plugin: KOTLIN_1_7 is unsupported in KGP 2.0+
+_PLUGIN_FILE="$APP_HOME/../node_modules/@react-native/gradle-plugin/react-native-gradle-plugin/build.gradle.kts"
+if [ -f "$_PLUGIN_FILE" ]; then
+  sed -i 's/KotlinVersion\.KOTLIN_1_7/KotlinVersion.KOTLIN_1_8/g' "$_PLUGIN_FILE"
+  echo "[gradlew-patch] Patched KOTLIN_1_7 -> KOTLIN_1_8 in react-native-gradle-plugin"
+fi
+
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD=maximum
 
