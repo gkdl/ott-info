@@ -4,6 +4,7 @@ const { withNativeWind } = require("nativewind/metro");
 const config = getDefaultConfig(__dirname);
 
 // Enable package exports resolution for packages like react-native-reanimated 4.x
-config.resolver.unstable_enablePackageExports = true;
+const nativeWindConfig = withNativeWind(config, { input: "./src/globals.css" });
+nativeWindConfig.resolver.unstable_enablePackageExports = true;
 
-module.exports = withNativeWind(config, { input: "./src/globals.css" });
+module.exports = nativeWindConfig;

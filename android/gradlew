@@ -147,6 +147,15 @@ if [ -f "$_CODEGEN_UTILS" ]; then
   fi
 fi
 
+# Fix 5c: Patch GeneratePropsJavaDelegate to handle undefined default value
+_JAVA_DELEGATE="$APP_HOME/../node_modules/react-native/node_modules/@react-native/codegen/lib/generators/components/GeneratePropsJavaDelegate.js"
+if [ -f "$_JAVA_DELEGATE" ]; then
+  if ! grep -q "PATCHED_DEFAULT" "$_JAVA_DELEGATE" 2>/dev/null; then
+    sed -i "s/typeAnnotation\.default\.toString()/(typeAnnotation.default !== undefined ? typeAnnotation.default : false).toString() \/* PATCHED_DEFAULT *\//g" "$_JAVA_DELEGATE"
+    echo "[gradlew-patch] Patched GeneratePropsJavaDelegate.js default handling"
+  fi
+fi
+
 # Fix 5b: Patch react-native-google-mobile-ads CodegenTypes.UnsafeObject
 _ADS_DIR="$APP_HOME/../node_modules/react-native-google-mobile-ads"
 if [ -d "$_ADS_DIR" ]; then
