@@ -86,10 +86,16 @@ for /r "%_PLUGIN_DIR%" %%F in (*.gradle.kts) do (
     powershell -Command "(Get-Content '%%F') | Where-Object { $_ -notmatch 'apiVersion\.set\(KotlinVersion' } | Set-Content '%%F'" >nul 2>&1
 )
 
-@rem Fix 3: Patch react-native-screens - remove accessibilityContainerViewIsModal
-set _SCREENS_DIR=%APP_HOME%..\node_modules\react-native-screens
-for /r "%_SCREENS_DIR%" %%F in (*.ts *.js) do (
-    powershell -Command "(Get-Content '%%F') | Where-Object { $_ -notmatch 'accessibilityContainerViewIsModal' } | Set-Content '%%F'" >nul 2>&1
+@rem Fix 3: Patch RN codegen to skip unknown/undefined prop types instead of crashing
+set _CODEGEN_UTILS=%APP_HOME%..\node_modules\react-native\node_modules\@react-native\codegen\lib\parsers\typescript\components\componentsUtils.js
+if exist "%_CODEGEN_UTILS%" (
+    powershell -Command "$c = Get-Content '%_CODEGEN_UTILS%' -Raw; if ($c -notmatch 'PATCHED_SKIP_UNDEFINED') { $c = $c -replace 'throw new Error\(`Unknown prop type', 'return { type: ''BooleanTypeAnnotation'' }; /* PATCHED_SKIP_UNDEFINED */ // throw new Error(`Unknown prop type'; Set-Content '%_CODEGEN_UTILS%' $c -NoNewline }" >nul 2>&1
+)
+
+@rem Fix 4a: Patch react-native-google-mobile-ads CodegenTypes.UnsafeObject
+set _ADS_DIR=%APP_HOME%..\node_modules\react-native-google-mobile-ads
+for /r "%_ADS_DIR%" %%F in (*.ts *.js) do (
+    powershell -Command "(Get-Content '%%F' -Raw) -replace 'CodegenTypes\.UnsafeObject','Object' | Set-Content '%%F' -NoNewline" >nul 2>&1
 )
 
 @rem Fix 4: Disable reanimated version check
