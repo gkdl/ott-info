@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// --- Patch 1: @react-native/gradle-plugin KGP version ---
+// --- Patch 1: @react-native/gradle-plugin KGP version + apiVersion fix ---
 const pluginDir = path.join(__dirname, '../node_modules/@react-native/gradle-plugin');
 
 if (!fs.existsSync(pluginDir)) {
@@ -9,17 +9,30 @@ if (!fs.existsSync(pluginDir)) {
 } else {
   const TARGET_KOTLIN = '2.2.21';
   const KOTLIN_VERSION_RE = /2\.0\.\d+/g;
+  const API_VERSION_RE = /^.*apiVersion\.set\(KotlinVersion.*$/gm;
 
   function patchFile(filePath) {
-    const content = fs.readFileSync(filePath, 'utf8');
-    if (!KOTLIN_VERSION_RE.test(content)) {
+    let content = fs.readFileSync(filePath, 'utf8');
+    let changed = false;
+
+    if (KOTLIN_VERSION_RE.test(content)) {
       KOTLIN_VERSION_RE.lastIndex = 0;
-      return;
+      content = content.replace(KOTLIN_VERSION_RE, TARGET_KOTLIN);
+      changed = true;
     }
     KOTLIN_VERSION_RE.lastIndex = 0;
-    const updated = content.replace(KOTLIN_VERSION_RE, TARGET_KOTLIN);
-    fs.writeFileSync(filePath, updated);
-    console.log('[patch-rn-gradle-plugin] patched', path.relative(process.cwd(), filePath));
+
+    if (filePath.endsWith('.kts') && API_VERSION_RE.test(content)) {
+      API_VERSION_RE.lastIndex = 0;
+      content = content.replace(API_VERSION_RE, '');
+      changed = true;
+    }
+    API_VERSION_RE.lastIndex = 0;
+
+    if (changed) {
+      fs.writeFileSync(filePath, content);
+      console.log('[patch-rn-gradle-plugin] patched', path.relative(process.cwd(), filePath));
+    }
   }
 
   const EXTENSIONS = new Set(['.kts', '.gradle', '.toml', '.properties']);
