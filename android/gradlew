@@ -137,14 +137,23 @@ if [ -f "$_WORKLETS_GRADLE" ]; then
   fi
 fi
 
-# Fix 5: Patch react-native-screens codegen spec - remove accessibilityContainerViewIsModal
-# (RN 0.79 codegen throws 'Unknown prop type: undefined' for this prop)
-_SCREENS_DIR="$APP_HOME/../node_modules/react-native-screens"
-if [ -d "$_SCREENS_DIR" ]; then
-  find "$_SCREENS_DIR" \( -name "*.ts" -o -name "*.js" \) 2>/dev/null | while read -r _f; do
-    if grep -q "accessibilityContainerViewIsModal" "$_f" 2>/dev/null; then
-      sed -i '/accessibilityContainerViewIsModal/d' "$_f"
-      echo "[gradlew-patch] Removed accessibilityContainerViewIsModal from $_f"
+# Fix 5: Patch RN codegen to return BooleanTypeAnnotation for unknown/undefined prop types
+# instead of crashing (fixes react-native-screens accessibilityContainerViewIsModal, leftScrollEdgeEffect etc.)
+_CODEGEN_UTILS="$APP_HOME/../node_modules/react-native/node_modules/@react-native/codegen/lib/parsers/typescript/components/componentsUtils.js"
+if [ -f "$_CODEGEN_UTILS" ]; then
+  if ! grep -q "PATCHED_SKIP_UNDEFINED" "$_CODEGEN_UTILS" 2>/dev/null; then
+    sed -i "s/throw new Error(\`Unknown prop type/return { type: 'BooleanTypeAnnotation', default: false }; \/* PATCHED_SKIP_UNDEFINED *\/ \/\/ throw new Error(\`Unknown prop type/g" "$_CODEGEN_UTILS"
+    echo "[gradlew-patch] Patched codegen componentsUtils.js to skip undefined prop types"
+  fi
+fi
+
+# Fix 5b: Patch react-native-google-mobile-ads CodegenTypes.UnsafeObject
+_ADS_DIR="$APP_HOME/../node_modules/react-native-google-mobile-ads"
+if [ -d "$_ADS_DIR" ]; then
+  find "$_ADS_DIR" \( -name "*.ts" -o -name "*.js" \) 2>/dev/null | while read -r _f; do
+    if grep -q "CodegenTypes\.UnsafeObject" "$_f" 2>/dev/null; then
+      sed -i 's/CodegenTypes\.UnsafeObject/Object/g' "$_f"
+      echo "[gradlew-patch] Patched CodegenTypes.UnsafeObject in $_f"
     fi
   done
 fi
