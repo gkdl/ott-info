@@ -107,85 +107,22 @@ find "$_PLUGIN_DIR" -name "*.gradle.kts" 2>/dev/null | while read -r _f; do
   fi
 done
 
-# Fix 3: Disable react-native-reanimated version check (4.4.x doesn't list RN 0.79 as supported)
+# Fix 3: Disable reanimated version check (in case the installed version doesn't list this RN)
 _REANIMATED_GRADLE="$APP_HOME/../node_modules/react-native-reanimated/android/build.gradle.kts"
 if [ -f "$_REANIMATED_GRADLE" ]; then
-  if grep -q "assertMinimalReactNativeVersionTask" "$_REANIMATED_GRADLE" 2>/dev/null; then
-    # Add 0.79 to any supported version string lists
-    sed -i 's/"0\.76"/"0.76", "0.79"/g' "$_REANIMATED_GRADLE"
-    sed -i 's/"0\.77"/"0.77", "0.79"/g' "$_REANIMATED_GRADLE"
-    sed -i 's/"0\.78"/"0.78", "0.79"/g' "$_REANIMATED_GRADLE"
-    # Disable the task at the end of the file as a fallback
-    if ! grep -q "assertMinimalReactNativeVersionTask.*enabled.*false" "$_REANIMATED_GRADLE"; then
-      printf '\ntasks.matching { it.name == "assertMinimalReactNativeVersionTask" }.configureEach { enabled = false }\n' >> "$_REANIMATED_GRADLE"
-    fi
+  if ! grep -q "assertMinimalReactNativeVersionTask.*enabled.*false" "$_REANIMATED_GRADLE" 2>/dev/null; then
+    printf '\ntasks.matching { it.name == "assertMinimalReactNativeVersionTask" }.configureEach { enabled = false }\n' >> "$_REANIMATED_GRADLE"
     echo "[gradlew-patch] Disabled reanimated version check in $_REANIMATED_GRADLE"
   fi
 fi
 
-# Fix 4: Disable react-native-worklets version check (0.9.x doesn't list RN 0.79 as supported)
+# Fix 4: Disable worklets version check
 _WORKLETS_GRADLE="$APP_HOME/../node_modules/react-native-worklets/android/build.gradle.kts"
 if [ -f "$_WORKLETS_GRADLE" ]; then
-  if grep -q "assertMinimalReactNativeVersionTask" "$_WORKLETS_GRADLE" 2>/dev/null; then
-    sed -i 's/"0\.76"/"0.76", "0.79"/g' "$_WORKLETS_GRADLE"
-    sed -i 's/"0\.77"/"0.77", "0.79"/g' "$_WORKLETS_GRADLE"
-    sed -i 's/"0\.78"/"0.78", "0.79"/g' "$_WORKLETS_GRADLE"
-    if ! grep -q "assertMinimalReactNativeVersionTask.*enabled.*false" "$_WORKLETS_GRADLE"; then
-      printf '\ntasks.matching { it.name == "assertMinimalReactNativeVersionTask" }.configureEach { enabled = false }\n' >> "$_WORKLETS_GRADLE"
-    fi
+  if ! grep -q "assertMinimalReactNativeVersionTask.*enabled.*false" "$_WORKLETS_GRADLE" 2>/dev/null; then
+    printf '\ntasks.matching { it.name == "assertMinimalReactNativeVersionTask" }.configureEach { enabled = false }\n' >> "$_WORKLETS_GRADLE"
     echo "[gradlew-patch] Disabled worklets version check in $_WORKLETS_GRADLE"
   fi
-fi
-
-# Fix 5: Patch RN codegen to return BooleanTypeAnnotation for unknown/undefined prop types
-# instead of crashing (fixes react-native-screens accessibilityContainerViewIsModal, leftScrollEdgeEffect etc.)
-_CODEGEN_UTILS="$APP_HOME/../node_modules/react-native/node_modules/@react-native/codegen/lib/parsers/typescript/components/componentsUtils.js"
-if [ -f "$_CODEGEN_UTILS" ]; then
-  if ! grep -q "PATCHED_SKIP_UNDEFINED" "$_CODEGEN_UTILS" 2>/dev/null; then
-    sed -i "s/throw new Error(\`Unknown prop type/return { type: 'BooleanTypeAnnotation', default: false }; \/* PATCHED_SKIP_UNDEFINED *\/ \/\/ throw new Error(\`Unknown prop type/g" "$_CODEGEN_UTILS"
-    echo "[gradlew-patch] Patched codegen componentsUtils.js to skip undefined prop types"
-  fi
-fi
-
-# Fix 5c: Patch GeneratePropsJavaDelegate to handle undefined default value
-_JAVA_DELEGATE="$APP_HOME/../node_modules/react-native/node_modules/@react-native/codegen/lib/generators/components/GeneratePropsJavaDelegate.js"
-if [ -f "$_JAVA_DELEGATE" ]; then
-  if ! grep -q "PATCHED_DEFAULT" "$_JAVA_DELEGATE" 2>/dev/null; then
-    sed -i "s/typeAnnotation\.default\.toString()/(typeAnnotation.default !== undefined ? typeAnnotation.default : false).toString() \/* PATCHED_DEFAULT *\//g" "$_JAVA_DELEGATE"
-    echo "[gradlew-patch] Patched GeneratePropsJavaDelegate.js default handling"
-  fi
-fi
-
-# Fix 6: Patch expo-modules-core for RN 0.79.7 Promise interface + C++ API changes
-_EXPO_PATCH_MARKER="$APP_HOME/../node_modules/expo-modules-core/.patched-rn-0.79.7"
-if [ ! -f "$_EXPO_PATCH_MARKER" ]; then
-  # 6a: KPromiseWrapper.kt - code is String? but RN 0.79.7 bridge.reject(code: String,...) needs non-null
-  _KPW="$APP_HOME/../node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/KPromiseWrapper.kt"
-  if [ -f "$_KPW" ]; then
-    sed -i 's/bridgePromise\.reject(code, message, cause)/bridgePromise.reject(code ?: "Unknown", message, cause)/' "$_KPW"
-    echo "[gradlew-patch] Patched KPromiseWrapper.kt"
-  fi
-
-  # 6b: Promise.kt anonymous class - reject overrides have code: String? but RN 0.79.7 interface needs code: String
-  _PROMISE="$APP_HOME/../node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/Promise.kt"
-  if [ -f "$_PROMISE" ]; then
-    # Protect the 4-param all-nullable override (keep its String?)
-    sed -i 's/override fun reject(code: String?, message: String?, throwable: Throwable?, userInfo: WritableMap?)/override fun reject(code: __KEEP_NULLABLE__, message: String?, throwable: Throwable?, userInfo: WritableMap?)/' "$_PROMISE"
-    # Change remaining 6 reject overrides: code: String? -> code: String
-    sed -i 's/override fun reject(code: String?,/override fun reject(code: String,/g' "$_PROMISE"
-    # Restore the protected 4-param override
-    sed -i 's/code: __KEEP_NULLABLE__/code: String?/' "$_PROMISE"
-    echo "[gradlew-patch] Patched Promise.kt"
-  fi
-
-  # 6c: NativeStatePropsGetter.cpp - EventQueue::UpdateMode removed in RN 0.79.7
-  _NSG="$APP_HOME/../node_modules/expo-modules-core/android/src/main/cpp/fabric/NativeStatePropsGetter.cpp"
-  if [ -f "$_NSG" ]; then
-    sed -i 's/, react::EventQueue::UpdateMode::unstable_Immediate//g' "$_NSG"
-    echo "[gradlew-patch] Patched NativeStatePropsGetter.cpp"
-  fi
-
-  touch "$_EXPO_PATCH_MARKER"
 fi
 
 # Fix 5b: Patch react-native-google-mobile-ads CodegenTypes.UnsafeObject

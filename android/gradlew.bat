@@ -86,30 +86,6 @@ for /r "%_PLUGIN_DIR%" %%F in (*.gradle.kts) do (
     powershell -Command "(Get-Content '%%F') | Where-Object { $_ -notmatch 'apiVersion\.set\(KotlinVersion' } | Set-Content '%%F'" >nul 2>&1
 )
 
-@rem Fix 3: Patch RN codegen GeneratePropsJavaDelegate to handle missing default value
-set _JAVA_DELEGATE=%APP_HOME%..\node_modules\react-native\node_modules\@react-native\codegen\lib\generators\components\GeneratePropsJavaDelegate.js
-if exist "%_JAVA_DELEGATE%" (
-    powershell -Command "$c = Get-Content '%_JAVA_DELEGATE%' -Raw; if ($c -notmatch 'PATCHED_DEFAULT') { $c = $c -replace 'typeAnnotation\.default\.toString\(\)', '(typeAnnotation.default !== undefined ? typeAnnotation.default : false).toString() /* PATCHED_DEFAULT */'; Set-Content '%_JAVA_DELEGATE%' $c -NoNewline }" >nul 2>&1
-)
-
-@rem Fix 6: Patch expo-modules-core for RN 0.79.7 Promise interface + C++ API changes
-set _EXPO_PATCH_MARKER=%APP_HOME%..\node_modules\expo-modules-core\.patched-rn-0.79.7
-if not exist "%_EXPO_PATCH_MARKER%" (
-    set _KPW=%APP_HOME%..\node_modules\expo-modules-core\android\src\main\java\expo\modules\kotlin\KPromiseWrapper.kt
-    if exist "%_KPW%" (
-        powershell -Command "$c = Get-Content '%_KPW%' -Raw; $c = $c -replace 'bridgePromise\.reject\(code, message, cause\)', 'bridgePromise.reject(code ?: ""Unknown"", message, cause)'; Set-Content '%_KPW%' $c -NoNewline" >nul 2>&1
-    )
-    set _PROMISE=%APP_HOME%..\node_modules\expo-modules-core\android\src\main\java\expo\modules\kotlin\Promise.kt
-    if exist "%_PROMISE%" (
-        powershell -Command "$c = Get-Content '%_PROMISE%' -Raw; $c = $c -replace 'override fun reject\(code: String\?, message: String\?, throwable: Throwable\?, userInfo: WritableMap\?\)', 'override fun reject(code: __KEEP_NULLABLE__, message: String?, throwable: Throwable?, userInfo: WritableMap?)'; $c = $c -replace 'override fun reject\(code: String\?,', 'override fun reject(code: String,'; $c = $c -replace 'code: __KEEP_NULLABLE__', 'code: String?'; Set-Content '%_PROMISE%' $c -NoNewline" >nul 2>&1
-    )
-    set _NSG=%APP_HOME%..\node_modules\expo-modules-core\android\src\main\cpp\fabric\NativeStatePropsGetter.cpp
-    if exist "%_NSG%" (
-        powershell -Command "(Get-Content '%_NSG%' -Raw) -replace ', react::EventQueue::UpdateMode::unstable_Immediate', '' | Set-Content '%_NSG%' -NoNewline" >nul 2>&1
-    )
-    powershell -Command "New-Item -ItemType File -Force '%_EXPO_PATCH_MARKER%'" >nul 2>&1
-)
-
 @rem Fix 4a: Patch react-native-google-mobile-ads CodegenTypes.UnsafeObject
 set _ADS_DIR=%APP_HOME%..\node_modules\react-native-google-mobile-ads
 for /r "%_ADS_DIR%" %%F in (*.ts *.js) do (
