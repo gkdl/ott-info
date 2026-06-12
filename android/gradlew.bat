@@ -73,6 +73,37 @@ echo location of your Java installation. 1>&2
 goto fail
 
 :execute
+@rem Patch @react-native/gradle-plugin for Gradle 9.3.1 + Kotlin 2.2.x compatibility
+set _PLUGIN_DIR=%APP_HOME%..\node_modules\@react-native\gradle-plugin
+
+@rem Fix 1: Upgrade KGP 2.0.x -> 2.2.21
+for /r "%_PLUGIN_DIR%" %%F in (*.gradle.kts *.toml *.properties) do (
+    powershell -Command "(Get-Content '%%F' -Raw) -replace '2\.0\.\d+','2.2.21' | Set-Content '%%F' -NoNewline" >nul 2>&1
+)
+
+@rem Fix 2: Remove apiVersion.set(KotlinVersion...) lines
+for /r "%_PLUGIN_DIR%" %%F in (*.gradle.kts) do (
+    powershell -Command "(Get-Content '%%F') | Where-Object { $_ -notmatch 'apiVersion\.set\(KotlinVersion' } | Set-Content '%%F'" >nul 2>&1
+)
+
+@rem Fix 3: Patch react-native-screens - remove accessibilityContainerViewIsModal
+set _SCREENS_DIR=%APP_HOME%..\node_modules\react-native-screens
+for /r "%_SCREENS_DIR%" %%F in (*.ts *.js) do (
+    powershell -Command "(Get-Content '%%F') | Where-Object { $_ -notmatch 'accessibilityContainerViewIsModal' } | Set-Content '%%F'" >nul 2>&1
+)
+
+@rem Fix 4: Disable reanimated version check
+set _REANIMATED_GRADLE=%APP_HOME%..\node_modules\react-native-reanimated\android\build.gradle.kts
+if exist "%_REANIMATED_GRADLE%" (
+    powershell -Command "Add-Content '%_REANIMATED_GRADLE%' '`ntasks.matching { it.name == ""assertMinimalReactNativeVersionTask"" }.configureEach { enabled = false }'" >nul 2>&1
+)
+
+@rem Fix 5: Disable worklets version check
+set _WORKLETS_GRADLE=%APP_HOME%..\node_modules\react-native-worklets\android\build.gradle.kts
+if exist "%_WORKLETS_GRADLE%" (
+    powershell -Command "Add-Content '%_WORKLETS_GRADLE%' '`ntasks.matching { it.name == ""assertMinimalReactNativeVersionTask"" }.configureEach { enabled = false }'" >nul 2>&1
+)
+
 @rem Setup the command line
 
 
