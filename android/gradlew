@@ -137,6 +137,18 @@ if [ -f "$_WORKLETS_GRADLE" ]; then
   fi
 fi
 
+# Fix 5: Patch react-native-screens codegen spec - remove accessibilityContainerViewIsModal
+# (RN 0.79 codegen throws 'Unknown prop type: undefined' for this prop)
+_SCREENS_DIR="$APP_HOME/../node_modules/react-native-screens"
+if [ -d "$_SCREENS_DIR" ]; then
+  find "$_SCREENS_DIR" \( -name "*.ts" -o -name "*.js" \) 2>/dev/null | while read -r _f; do
+    if grep -q "accessibilityContainerViewIsModal" "$_f" 2>/dev/null; then
+      sed -i '/accessibilityContainerViewIsModal/d' "$_f"
+      echo "[gradlew-patch] Removed accessibilityContainerViewIsModal from $_f"
+    fi
+  done
+fi
+
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD=maximum
 
