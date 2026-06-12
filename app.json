@@ -68,11 +68,11 @@
         "expo-build-properties",
         {
           "android": {
-            "gradleVersion": "8.8",
             "kotlinVersion": "2.0.21"
           }
         }
-      ]
+      ],
+      "./plugins/withGradleWrapper"
     ],
     "runtimeVersion": {
       "policy": "appVersion"
