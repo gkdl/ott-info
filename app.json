@@ -63,7 +63,8 @@
           "androidAppId": "ca-app-pub-3940256099942544~3347511713",
           "iosAppId": "ca-app-pub-3940256099942544~1458002511"
         }
-      ]
+      ],
+      "expo-build-properties"
     ],
     "runtimeVersion": {
       "policy": "appVersion"
@@ -73,6 +74,12 @@
     },
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7777e629-fd10-41d6-84a1-122e4cbb56df"
+      }
     }
   }
 }
