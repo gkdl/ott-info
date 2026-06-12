@@ -1,20 +1,29 @@
 #!/bin/bash
 set -e
 
-PLUGIN_DIR="node_modules/@react-native/gradle-plugin"
+echo "[patch] Looking for gradle-wrapper.properties in react-native template..."
 
-if [ ! -d "$PLUGIN_DIR" ]; then
-  echo "[patch] @react-native/gradle-plugin not found, skipping"
-  exit 0
+# expo prebuild copies this template file to android/gradle/wrapper/gradle-wrapper.properties
+# Patching it here (before prebuild runs) ensures the correct Gradle version is used
+TEMPLATE_WRAPPER="node_modules/react-native/template/android/gradle/wrapper/gradle-wrapper.properties"
+
+if [ -f "$TEMPLATE_WRAPPER" ]; then
+  echo "[patch] Found: $TEMPLATE_WRAPPER"
+  echo "[patch] Before:"
+  cat "$TEMPLATE_WRAPPER"
+  sed -i 's|gradle-[0-9][0-9.]*-bin\.zip|gradle-8.13-bin.zip|g' "$TEMPLATE_WRAPPER"
+  sed -i 's|gradle-[0-9][0-9.]*-all\.zip|gradle-8.13-bin.zip|g' "$TEMPLATE_WRAPPER"
+  echo "[patch] After:"
+  cat "$TEMPLATE_WRAPPER"
+else
+  echo "[patch] Template not found at expected path, searching..."
+  find node_modules/react-native -name "gradle-wrapper.properties" 2>/dev/null | while read -r f; do
+    echo "[patch] Found: $f"
+    sed -i 's|gradle-[0-9][0-9.]*-bin\.zip|gradle-8.13-bin.zip|g' "$f"
+    sed -i 's|gradle-[0-9][0-9.]*-all\.zip|gradle-8.13-bin.zip|g' "$f"
+    echo "[patch] Patched: $f"
+    cat "$f"
+  done
 fi
-
-echo "[patch] Patching @react-native/gradle-plugin Kotlin version to 2.2.21..."
-
-find "$PLUGIN_DIR" \( -name "*.gradle.kts" -o -name "*.gradle" -o -name "*.toml" -o -name "*.properties" \) | while read -r f; do
-  if grep -q "2\.0\." "$f" 2>/dev/null; then
-    echo "[patch] Patching: $f"
-    sed -i 's/2\.0\.[0-9][0-9]*/2.2.21/g' "$f"
-  fi
-done
 
 echo "[patch] Done"
