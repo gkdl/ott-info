@@ -96,13 +96,12 @@ if (!fs.existsSync(adsDir)) {
 
 // --- Patch 3: react-native-screens accessibilityContainerViewIsModal undefined type ---
 // RN 0.79 codegen fails on props with unresolved/undefined types; remove the offending prop
+// Only patch codegen spec files (Native*.ts in src/specs/ directories), not component files
 const screensDir = path.join(__dirname, '../node_modules/react-native-screens');
 
 if (!fs.existsSync(screensDir)) {
   console.log('[patch-screens] react-native-screens not found, skipping');
 } else {
-  const SCREENS_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx']);
-
   function patchScreensFile(filePath) {
     let content;
     try {
@@ -111,7 +110,6 @@ if (!fs.existsSync(screensDir)) {
       return;
     }
     if (!content.includes('accessibilityContainerViewIsModal')) return;
-    // Remove the entire line(s) containing this prop declaration
     const updated = content
       .split('\n')
       .filter(line => !line.includes('accessibilityContainerViewIsModal'))
@@ -131,7 +129,11 @@ if (!fs.existsSync(screensDir)) {
       const full = path.join(dir, entry.name);
       if (entry.isDirectory() && entry.name !== 'node_modules') {
         walkScreens(full);
-      } else if (SCREENS_EXTENSIONS.has(path.extname(entry.name))) {
+      } else if (
+        // Only patch codegen spec files: Native*.ts or files inside src/specs/
+        (entry.name.startsWith('Native') && entry.name.endsWith('.ts')) ||
+        (dir.includes('specs') && entry.name.endsWith('.ts'))
+      ) {
         patchScreensFile(full);
       }
     }
