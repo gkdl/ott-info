@@ -88,12 +88,22 @@ APP_BASE_NAME=${0##*/}
 # Discard cd standard output in case $CDPATH is set (https://github.com/gradle/gradle/issues/25036)
 APP_HOME=$( cd -P "${APP_HOME:-./}" > /dev/null && printf '%s\n' "$PWD" ) || exit
 
-# Patch @react-native/gradle-plugin: KOTLIN_1_7 is unsupported in KGP 2.0+
+# Patch @react-native/gradle-plugin for Gradle 9.3.1 + Kotlin 2.2.x compatibility
 _PLUGIN_DIR="$APP_HOME/../node_modules/@react-native/gradle-plugin"
+
+# Fix 1: Upgrade KGP from 2.0.x to 2.2.21 to match Gradle 9.3.1's bundled Kotlin 2.2.x
+find "$_PLUGIN_DIR" \( -name "*.gradle.kts" -o -name "*.toml" -o -name "*.properties" \) 2>/dev/null | while read -r _f; do
+  if grep -q "2\.0\." "$_f" 2>/dev/null; then
+    sed -i 's/2\.0\.[0-9]*/2.2.21/g' "$_f"
+    echo "[gradlew-patch] KGP 2.0.x -> 2.2.21 in $_f"
+  fi
+done
+
+# Fix 2: Remove apiVersion.set(KOTLIN_1_7/1_8) - not supported in KGP 2.2.x
 find "$_PLUGIN_DIR" -name "*.gradle.kts" 2>/dev/null | while read -r _f; do
-  if grep -q "KOTLIN_1_7" "$_f"; then
-    sed -i 's/KotlinVersion\.KOTLIN_1_7/KotlinVersion.KOTLIN_1_8/g' "$_f"
-    echo "[gradlew-patch] Patched KOTLIN_1_7 -> KOTLIN_1_8 in $_f"
+  if grep -q "apiVersion\.set(KotlinVersion" "$_f"; then
+    sed -i '/apiVersion\.set(KotlinVersion/d' "$_f"
+    echo "[gradlew-patch] Removed apiVersion.set in $_f"
   fi
 done
 
