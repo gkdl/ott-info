@@ -93,3 +93,50 @@ if (!fs.existsSync(adsDir)) {
   walkAds(adsDir);
   console.log('[patch-ads] done');
 }
+
+// --- Patch 3: react-native-screens accessibilityContainerViewIsModal undefined type ---
+// RN 0.79 codegen fails on props with unresolved/undefined types; remove the offending prop
+const screensDir = path.join(__dirname, '../node_modules/react-native-screens');
+
+if (!fs.existsSync(screensDir)) {
+  console.log('[patch-screens] react-native-screens not found, skipping');
+} else {
+  const SCREENS_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx']);
+
+  function patchScreensFile(filePath) {
+    let content;
+    try {
+      content = fs.readFileSync(filePath, 'utf8');
+    } catch {
+      return;
+    }
+    if (!content.includes('accessibilityContainerViewIsModal')) return;
+    // Remove the entire line(s) containing this prop declaration
+    const updated = content
+      .split('\n')
+      .filter(line => !line.includes('accessibilityContainerViewIsModal'))
+      .join('\n');
+    fs.writeFileSync(filePath, updated);
+    console.log('[patch-screens] removed accessibilityContainerViewIsModal from', path.relative(process.cwd(), filePath));
+  }
+
+  function walkScreens(dir) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory() && entry.name !== 'node_modules') {
+        walkScreens(full);
+      } else if (SCREENS_EXTENSIONS.has(path.extname(entry.name))) {
+        patchScreensFile(full);
+      }
+    }
+  }
+
+  walkScreens(screensDir);
+  console.log('[patch-screens] done');
+}
