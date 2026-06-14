@@ -7,7 +7,7 @@ on:
 jobs:
   # ── 1. Supabase Edge Functions + DB 마이그레이션 배포 ─────────────────────
   deploy-supabase:
-    name: Deploy Supabase (Google Cloud)
+    name: Deploy Supabase
     runs-on: ubuntu-latest
 
     steps:

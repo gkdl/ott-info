@@ -37,3 +37,6 @@ supabase/functions/.env
 *.jks
 credentials.json
 google-play-key.json
+
+## 로컬 시크릿 메모 (절대 커밋 금지)
+.secrets/
