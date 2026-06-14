@@ -12,6 +12,7 @@ import { ProfileHeader } from "@/components/mypage/ProfileHeader";
 import { FavoritesGrid } from "@/components/mypage/FavoritesGrid";
 import { MyReviewList } from "@/components/mypage/MyReviewList";
 import { AccountActions } from "@/components/mypage/AccountActions";
+import { TmdbAttribution } from "@/components/mypage/TmdbAttribution";
 import { useAuthStatus } from "@/store/authStore";
 
 export default function MyPageScreen() {
@@ -34,6 +35,11 @@ export default function MyPageScreen() {
         >
           <Text style={styles.loginButtonText}>로그인하기</Text>
         </Pressable>
+
+        {/* TMDB 출처 표기 — 비로그인 상태에서도 보이도록 (API 약관 요구사항) */}
+        <View style={styles.loginPromptAttribution}>
+          <TmdbAttribution />
+        </View>
       </View>
     );
   }
@@ -60,6 +66,9 @@ export default function MyPageScreen() {
 
           {/* 로그아웃 / 회원탈퇴 / 약관 */}
           <AccountActions />
+
+          {/* TMDB 출처 표기 (API 약관 요구사항) */}
+          <TmdbAttribution />
 
           <View style={{ height: 40 }} />
         </View>
@@ -92,4 +101,5 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   loginButtonText: { color: "#000", fontWeight: "700", fontSize: 16 },
+  loginPromptAttribution: { marginTop: 32 },
 });

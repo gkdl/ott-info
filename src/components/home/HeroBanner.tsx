@@ -16,17 +16,11 @@ import { SectionError } from "@/components/shared/StateViews";
 import { useTrending } from "@/hooks/useTmdb";
 import { useFavoriteToggle, useFavoriteStatus } from "@/hooks/useFavorite";
 import { useCurrentUser } from "@/store/authStore";
-import type { TmdbContent, TmdbMovie, TmdbTv } from "@/types/tmdb";
+import { getContentInfo } from "@/lib/tmdbContent";
+import type { TmdbContent } from "@/types/tmdb";
 
 const SLIDE_COUNT = 5;
 const AUTO_ADVANCE_MS = 5000;
-
-function getContentInfo(item: TmdbContent) {
-  const isMovie = item.media_type === "movie" || "title" in item;
-  const title = isMovie ? (item as TmdbMovie).title : (item as TmdbTv).name;
-  const mediaType = (item.media_type ?? (isMovie ? "movie" : "tv")) as "movie" | "tv";
-  return { title, mediaType };
-}
 
 // ─── 개별 슬라이드 ────────────────────────────────────────────────────────────
 // 즐겨찾기 훅을 슬라이드마다 호출하기 위해 컴포넌트로 분리
@@ -46,7 +40,10 @@ function BannerSlide({ item, index, width }: BannerSlideProps) {
   const favoriteToggle = useFavoriteToggle(String(item.id), mediaType);
 
   function handleFavorite() {
-    if (!user) return;
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     favoriteToggle.mutate({
       userId: user.id,
       contentId: String(item.id),

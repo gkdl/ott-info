@@ -3,16 +3,12 @@ import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { PosterImage } from "@/components/ui/CachedImage";
 import { useSimilar } from "@/hooks/useTmdb";
-import type { MediaType, TmdbContent, TmdbMovie, TmdbTv } from "@/types/tmdb";
+import { getContentInfo } from "@/lib/tmdbContent";
+import type { MediaType } from "@/types/tmdb";
 
 interface SimilarContentProps {
   contentId: number;
   mediaType: MediaType;
-}
-
-function getTitle(item: TmdbContent, mediaType: MediaType) {
-  const isMovie = mediaType === "movie" || item.media_type === "movie" || "title" in item;
-  return isMovie ? (item as TmdbMovie).title : (item as TmdbTv).name;
 }
 
 export function SimilarContent({ contentId, mediaType }: SimilarContentProps) {
@@ -41,8 +37,7 @@ export function SimilarContent({ contentId, mediaType }: SimilarContentProps) {
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
           renderItem={({ item }) => {
-            const title = getTitle(item, mediaType);
-            const itemType = (item.media_type ?? mediaType) as MediaType;
+            const { title, mediaType: itemType } = getContentInfo(item, mediaType);
             return (
               <Pressable
                 style={styles.card}

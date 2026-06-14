@@ -4,23 +4,23 @@ import { useRouter } from "expo-router";
 import { PosterImage } from "@/components/ui/CachedImage";
 import { CarouselSkeleton } from "@/components/shared/Skeleton";
 import { SectionError } from "@/components/shared/StateViews";
-import type { UseQueryResult } from "@tanstack/react-query";
-import type { TmdbPaginatedResult, TmdbContent, TmdbMovie, TmdbTv } from "@/types/tmdb";
+import { getContentInfo } from "@/lib/tmdbContent";
+import type { TmdbPaginatedResult, TmdbContent } from "@/types/tmdb";
+
+// useQuery 결과뿐 아니라 직접 합성한 결과(예: 영화+드라마 병합)도 받을 수 있도록 구조적 타입.
+// 실제 UseQueryResult 도 이 형태를 만족한다.
+export interface CarouselQuery {
+  data?: TmdbPaginatedResult<TmdbContent>;
+  isLoading: boolean;
+  isError: boolean;
+  refetch: () => void;
+}
 
 interface ContentCarouselProps {
   title: string;
-  query: UseQueryResult<TmdbPaginatedResult<TmdbContent>>;
+  query: CarouselQuery;
   defaultMediaType?: "movie" | "tv";
   showRank?: boolean;
-}
-
-function getItemInfo(item: TmdbContent, defaultMediaType: "movie" | "tv") {
-  const isMovie =
-    item.media_type === "movie" ||
-    (item.media_type === undefined && "title" in item);
-  const title = isMovie ? (item as TmdbMovie).title : (item as TmdbTv).name;
-  const mediaType = (item.media_type ?? defaultMediaType) as "movie" | "tv";
-  return { title, mediaType };
 }
 
 export function ContentCarousel({
@@ -48,7 +48,7 @@ export function ContentCarousel({
       <Text style={styles.sectionTitle}>{title}</Text>
       <FlatList
         data={items}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={(item) => `${item.media_type ?? ""}-${item.id}`}
         horizontal
         showsHorizontalScrollIndicator={false}
         // 순위 표시 시 숫자가 포스터 밖으로 삐져나오므로 좌측 여백 조정
@@ -57,7 +57,7 @@ export function ContentCarousel({
           <View style={{ width: showRank ? 4 : 12 }} />
         )}
         renderItem={({ item, index }) => {
-          const { title: itemTitle, mediaType } = getItemInfo(item, defaultMediaType);
+          const { title: itemTitle, mediaType } = getContentInfo(item, defaultMediaType);
           return (
             <Pressable
               style={[styles.card, showRank && styles.cardWithRank]}

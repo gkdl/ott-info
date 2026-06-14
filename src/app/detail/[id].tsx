@@ -5,9 +5,10 @@ import {
   StyleSheet,
   StatusBar,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 import { DetailHeader, DetailHeaderSkeleton } from "@/components/detail/DetailHeader";
+import { TrailerSection } from "@/components/detail/TrailerSection";
 import { OttProviders } from "@/components/detail/OttProviders";
 import { ReviewSection } from "@/components/detail/ReviewSection";
 import { SimilarContent } from "@/components/detail/SimilarContent";
@@ -16,12 +17,8 @@ import { ErrorView } from "@/components/shared/StateViews";
 import { useContentDetail } from "@/hooks/useTmdb";
 import { useFavoriteStatus, useFavoriteToggle } from "@/hooks/useFavorite";
 import { useCurrentUser } from "@/store/authStore";
+import { isMovieDetail as isMovie } from "@/lib/tmdbContent";
 import type { MediaType } from "@/types/tmdb";
-import type { TmdbMovieDetail, TmdbTvDetail } from "@/types/tmdb";
-
-function isMovie(d: TmdbMovieDetail | TmdbTvDetail): d is TmdbMovieDetail {
-  return "title" in d;
-}
 
 export default function DetailScreen() {
   const { id, type } = useLocalSearchParams<{ id: string; type: string }>();
@@ -29,6 +26,7 @@ export default function DetailScreen() {
   const mediaType = (type === "tv" ? "tv" : "movie") as MediaType;
 
   const user = useCurrentUser();
+  const router = useRouter();
 
   const { data: detail, isLoading, isError, refetch } = useContentDetail(
     mediaType,
@@ -39,7 +37,12 @@ export default function DetailScreen() {
   const favoriteToggle = useFavoriteToggle(String(contentId), mediaType);
 
   function handleFavoriteToggle() {
-    if (!user || !detail) return;
+    if (!detail) return;
+    // 게스트는 즐겨찾기 시 로그인 유도
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     const title = isMovie(detail) ? detail.title : detail.name;
     favoriteToggle.mutate({
       userId: user.id,
@@ -91,6 +94,9 @@ export default function DetailScreen() {
         />
 
         <View style={styles.body}>
+          {/* 예고편 (TMDB videos, YouTube) */}
+          <TrailerSection videos={detail.videos?.results} />
+
           {/* OTT 시청 가능 서비스 */}
           <OttProviders contentId={contentId} mediaType={mediaType} />
 

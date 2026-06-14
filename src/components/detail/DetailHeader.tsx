@@ -1,18 +1,15 @@
 import React from "react";
-import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { BackdropImage, PosterImage } from "@/components/ui/CachedImage";
 import { SkeletonBox } from "@/components/shared/Skeleton";
+import { isMovieDetail as isMovie } from "@/lib/tmdbContent";
 import type { TmdbMovieDetail, TmdbTvDetail } from "@/types/tmdb";
 
 type ContentDetail = TmdbMovieDetail | TmdbTvDetail;
-
-function isMovie(d: ContentDetail): d is TmdbMovieDetail {
-  return "title" in d;
-}
 
 interface DetailHeaderProps {
   detail: ContentDetail;

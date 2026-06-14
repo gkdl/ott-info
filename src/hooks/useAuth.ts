@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
 import { signInWithKakao, signOut, deleteAccount, agreeToEula, updateNickname } from "@/services/auth";
 import { useAuthStore, useAuthStatus, useCurrentProfile } from "@/store/authStore";
 import { queryClient } from "@/lib/queryClient";
+import { confirmDialog, alertDialog } from "@/lib/dialog";
 
 // ─── 카카오 로그인 훅 ─────────────────────────────────────────────────────────
 
@@ -19,7 +19,7 @@ export function useKakaoLogin() {
       if (result.status === "cancelled") return;
 
       if (result.status === "error") {
-        Alert.alert("로그인 실패", result.message);
+        alertDialog("로그인 실패", result.message);
         return;
       }
 
@@ -73,15 +73,14 @@ export function useSignOut() {
       router.replace("/login");
     },
     onError: () => {
-      Alert.alert("오류", "로그아웃 중 문제가 발생했습니다.");
+      alertDialog("오류", "로그아웃 중 문제가 발생했습니다.");
     },
   });
 
-  function confirmSignOut() {
-    Alert.alert("로그아웃", "로그아웃 하시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      { text: "로그아웃", style: "destructive", onPress: () => mutation.mutate() },
-    ]);
+  async function confirmSignOut() {
+    if (await confirmDialog("로그아웃", "로그아웃 하시겠습니까?", "로그아웃")) {
+      mutation.mutate();
+    }
   }
 
   return { confirmSignOut, isPending: mutation.isPending };
@@ -94,36 +93,27 @@ export function useDeleteAccount() {
 
   const mutation = useMutation({
     mutationFn: deleteAccount,
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       if (result.status === "error") {
-        Alert.alert("오류", result.message);
+        alertDialog("오류", result.message);
         return;
       }
       queryClient.clear();
-      Alert.alert(
-        "탈퇴 완료",
-        "계정과 모든 데이터가 삭제되었습니다.",
-        [{ text: "확인", onPress: () => router.replace("/login") }]
-      );
+      await alertDialog("탈퇴 완료", "계정과 모든 데이터가 삭제되었습니다.");
+      router.replace("/login");
     },
     onError: () => {
-      Alert.alert("오류", "회원탈퇴 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      alertDialog("오류", "회원탈퇴 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
     },
   });
 
-  function confirmDeleteAccount() {
-    Alert.alert(
+  async function confirmDeleteAccount() {
+    const ok = await confirmDialog(
       "회원탈퇴",
       "탈퇴하면 작성한 리뷰, 즐겨찾기 등 모든 데이터가 영구 삭제되며 복구할 수 없습니다.\n정말 탈퇴하시겠습니까?",
-      [
-        { text: "취소", style: "cancel" },
-        {
-          text: "탈퇴하기",
-          style: "destructive",
-          onPress: () => mutation.mutate(),
-        },
-      ]
+      "탈퇴하기"
     );
+    if (ok) mutation.mutate();
   }
 
   return { confirmDeleteAccount, isPending: mutation.isPending };
@@ -135,7 +125,7 @@ export function useUpdateNickname() {
   return useMutation({
     mutationFn: ({ userId, nickname }: { userId: string; nickname: string }) =>
       updateNickname(userId, nickname),
-    onError: (err: Error) => Alert.alert("수정 실패", err.message),
+    onError: (err: Error) => alertDialog("수정 실패", err.message),
   });
 }
 

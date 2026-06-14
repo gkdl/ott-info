@@ -3,10 +3,10 @@ import {
   View,
   Text,
   Pressable,
-  FlatList,
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { ReviewForm } from "./ReviewForm";
 import { ReviewCard } from "./ReviewCard";
 import { CarouselSkeleton } from "@/components/shared/Skeleton";
@@ -37,6 +37,7 @@ export function ReviewSection({
   posterPath,
 }: ReviewSectionProps) {
   const user = useCurrentUser();
+  const router = useRouter();
   const [sort, setSort] = useState<ReviewSort>("latest");
   const [editingReview, setEditingReview] = useState<ReviewWithProfile | null>(null);
 
@@ -59,6 +60,13 @@ export function ReviewSection({
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>리뷰</Text>
+
+      {/* 비로그인(게스트): 로그인 유도 */}
+      {!user && (
+        <Pressable style={styles.loginPrompt} onPress={() => router.push("/login")}>
+          <Text style={styles.loginPromptText}>로그인하고 리뷰 작성하기</Text>
+        </Pressable>
+      )}
 
       {/* 리뷰 작성 폼 — 비로그인이거나 본인 리뷰가 있을 때 숨김 */}
       {user && !myReview && !editingReview && (
@@ -168,6 +176,15 @@ const styles = StyleSheet.create({
     borderColor: "#374151",
   },
   sortChipActive: { backgroundColor: "#6366f1", borderColor: "#6366f1" },
+  loginPrompt: {
+    marginHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#374151",
+    alignItems: "center",
+  },
+  loginPromptText: { color: "#9ca3af", fontSize: 14, fontWeight: "600" },
   sortChipText: { color: "#9ca3af", fontSize: 12, fontWeight: "600" },
   sortChipTextActive: { color: "#fff" },
   loadMoreButton: {

@@ -5,12 +5,14 @@ import Toast from "react-native-toast-message";
 // TMDB provider_id 기준. 신규 플랫폼 추가 시 여기에만 추가.
 const OTT_APP_SCHEMES: Record<number, string> = {
   8:    "netflix://",          // Netflix
+  1796: "netflix://",          // Netflix Standard with Ads (광고형)
   356:  "wavve://",            // Wavve
   97:   "watcha://",           // Watcha
   337:  "disneyplus://",       // Disney+
   350:  "appletv://",          // Apple TV+
-  96:   "amazonprime://",      // Prime Video (KR)
-  619:  "coupangplay://",      // Coupang Play
+  1883: "tving://",            // TVING
+  119:  "amazonprime://",      // Prime Video (KR)
+  1881: "coupangplay://",      // Coupang Play
   525:  "paramountplus://",    // Paramount+
   2:    "appletvplus://",      // Apple TV (buy/rent)
 };

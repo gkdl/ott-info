@@ -1,9 +1,10 @@
+import type { ComponentProps } from "react";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import type { ColorValue } from "react-native";
 
-type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
+type IoniconsName = ComponentProps<typeof Ionicons>["name"];
 
 function tabIcon(name: IoniconsName, activeName: IoniconsName) {
   return ({ focused, color }: { focused: boolean; color: ColorValue }) => (

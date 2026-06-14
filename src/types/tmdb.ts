@@ -68,11 +68,28 @@ export interface TmdbGenre {
   name: string;
 }
 
+// detail 응답에 append_to_response=videos 로 함께 내려오는 영상 정보
+export interface TmdbVideo {
+  id: string;
+  key: string;
+  name: string;
+  site: string; // "YouTube" | "Vimeo" 등
+  type: string; // "Trailer" | "Teaser" | "Clip" 등
+  official: boolean;
+  iso_639_1: string;
+  published_at: string;
+}
+
+export interface TmdbVideosResult {
+  results: TmdbVideo[];
+}
+
 export interface TmdbMovieDetail extends TmdbMovie {
   genres: TmdbGenre[];
   runtime: number | null;
   tagline: string;
   status: string;
+  videos?: TmdbVideosResult;
 }
 
 export interface TmdbTvDetail extends TmdbTv {
@@ -81,6 +98,7 @@ export interface TmdbTvDetail extends TmdbTv {
   number_of_seasons: number;
   number_of_episodes: number;
   status: string;
+  videos?: TmdbVideosResult;
 }
 
 export type TmdbDetail = TmdbMovieDetail | TmdbTvDetail;

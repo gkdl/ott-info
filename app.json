@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "OTT Info",
+    "name": "어디서볼까",
     "slug": "ott-info",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.yourcompany.ottinfo",
+      "bundleIdentifier": "com.gkdl.ottinfo",
       "buildNumber": "1",
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
@@ -35,7 +35,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#030712"
       },
-      "package": "com.yourcompany.ottinfo",
+      "package": "com.gkdl.ottinfo",
       "versionCode": 1,
       "permissions": [
         "android.permission.INTERNET"
@@ -47,6 +47,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "./plugins/withAndroidSigning",
       "expo-router",
       "expo-secure-store",
       [

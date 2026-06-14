@@ -10,6 +10,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { HeroBanner } from "@/components/home/HeroBanner";
+import { MyOttSection } from "@/components/home/MyOttSection";
+import { CategoryRows } from "@/components/home/CategoryRows";
 import { ContentCarousel } from "@/components/home/ContentCarousel";
 import { GenreSection } from "@/components/home/GenreSection";
 import { CommunityFeed } from "@/components/home/CommunityFeed";
@@ -49,7 +51,7 @@ export default function HomeScreen() {
       {/* 앱 타이틀 헤더 */}
       <View style={styles.appHeader}>
         <Text style={styles.appLogo}>▶</Text>
-        <Text style={styles.appTitle}>OTT<Text style={styles.appTitleAccent}>INFO</Text></Text>
+        <Text style={styles.appTitle}>어디서<Text style={styles.appTitleAccent}>볼까</Text></Text>
       </View>
 
       <ScrollView
@@ -81,6 +83,9 @@ export default function HomeScreen() {
             showRank
           />
 
+          {/* 내 구독 OTT 기준 개인화 추천 (게스트 포함) */}
+          <MyOttSection />
+
           <ContentCarousel
             title="★ 역대 명작"
             query={topRatedQuery}
@@ -99,6 +104,9 @@ export default function HomeScreen() {
             query={nowPlayingQuery}
             defaultMediaType="tv"
           />
+
+          {/* 예능 · 애니 · 다큐 · 키즈 카테고리 행 */}
+          <CategoryRows />
 
           <GenreSection />
 

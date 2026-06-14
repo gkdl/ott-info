@@ -98,6 +98,22 @@ export const tmdbService = {
     });
   },
 
+  /** 홈 카테고리 행 (예능/애니/다큐/키즈) — 장르 + 한국/일본 등 추가 필터 */
+  discoverCategory(
+    mediaType: MediaType,
+    genreId: number,
+    extraParams: Record<string, string> = {},
+    page = 1
+  ) {
+    return callProxy<TmdbPaginatedResult<TmdbContent>>({
+      endpoint: "discover",
+      media_type: mediaType,
+      genre_id: String(genreId),
+      page: String(page),
+      ...extraParams,
+    });
+  },
+
   /** 상세 정보 */
   getDetail(mediaType: MediaType, contentId: number) {
     return callProxy<TmdbDetail>({

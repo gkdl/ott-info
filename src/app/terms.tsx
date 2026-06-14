@@ -21,7 +21,7 @@ export default function TermsScreen() {
         <Text style={styles.updated}>최종 업데이트: 2025년 1월 1일</Text>
 
         <Section title="제1조 (목적)">
-          {`본 약관은 OTT Info 서비스(이하 "서비스")의 이용 조건 및 절차, 이용자와 서비스 제공자의 권리·의무를 규정함을 목적으로 합니다.`}
+          {`본 약관은 어디서볼까 서비스(이하 "서비스")의 이용 조건 및 절차, 이용자와 서비스 제공자의 권리·의무를 규정함을 목적으로 합니다.`}
         </Section>
 
         <Section title="제2조 (서비스 내용)">

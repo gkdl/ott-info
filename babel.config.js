@@ -11,7 +11,9 @@ module.exports = function (api) {
           root: ["./src"],
           alias: { "@": "./src" }
         }
-      ]
+      ],
+      // reanimated 4 requires the worklets plugin, and it MUST be listed last
+      "react-native-worklets/plugin"
     ]
   };
 };

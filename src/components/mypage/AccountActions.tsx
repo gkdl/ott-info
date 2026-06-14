@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   menuSublabel: { color: "#6b7280", fontSize: 12 },
   chevron: { color: "#4b5563", fontSize: 18 },
   loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.3)",
     borderRadius: 14,
   },

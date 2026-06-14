@@ -1,12 +1,16 @@
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { tmdbService } from "@/services/tmdb";
 import type { MediaType } from "@/types/tmdb";
+import type { ContentCategory } from "@/constants/ottProviders";
 
 export const tmdbKeys = {
   similar: (mediaType: string, contentId: number) =>
     ["tmdb", "similar", mediaType, contentId] as const,
   browseByProvider: (mediaType: string, providerId: number, genreId: number) =>
     ["tmdb", "browse_provider", mediaType, providerId, genreId] as const,
+  providerPicks: (mediaType: string, providerId: number) =>
+    ["tmdb", "provider_picks", mediaType, providerId] as const,
+  categoryRow: (key: string) => ["tmdb", "category_row", key] as const,
   trending: (mediaType: string, timeWindow: string) =>
     ["tmdb", "trending", mediaType, timeWindow] as const,
   topRated: (mediaType: string) => ["tmdb", "top_rated", mediaType] as const,
@@ -103,6 +107,31 @@ export function useSimilar(mediaType: MediaType, contentId: number) {
     queryFn: () => tmdbService.getSimilar(mediaType, contentId),
     enabled: contentId > 0,
     staleTime: 10 * 60 * 1000,
+  });
+}
+
+// 홈 카테고리 행 (예능/애니/다큐/키즈)
+export function useCategoryRow(category: ContentCategory) {
+  return useQuery({
+    queryKey: tmdbKeys.categoryRow(category.key),
+    queryFn: () =>
+      tmdbService.discoverCategory(
+        category.mediaType,
+        category.genreId as number,
+        category.homeFilters
+      ),
+    enabled: typeof category.genreId === "number",
+    staleTime: 30 * 60 * 1000,
+  });
+}
+
+// 홈 "내 OTT 추천" — 프로바이더별 첫 페이지만 가볍게
+export function useProviderPicks(mediaType: MediaType, providerId: number) {
+  return useQuery({
+    queryKey: tmdbKeys.providerPicks(mediaType, providerId),
+    queryFn: () => tmdbService.discoverByProvider(mediaType, providerId, undefined, 1),
+    enabled: providerId > 0,
+    staleTime: 30 * 60 * 1000,
   });
 }
 

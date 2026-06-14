@@ -56,10 +56,19 @@ function checkRateLimit(key: string, maxRequests: number): boolean {
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const TMDB_KEY = Deno.env.get("TMDB_API_KEY") ?? "";
 
+// 성인/에로 콘텐츠 차단용 TMDB 키워드 ID (discover 계열에서 without_keywords로 제외).
+// softcore, erotica, unsimulated sex, erotic, pornography, hardcore, sexploitation,
+// erotic vignettes, child pornography, gay/trans/gonzo pornography
+const ADULT_EXCLUDE_KEYWORDS =
+  "155477,325693,282903,256466,445,375524,10053,155691,6443,238355,335703,154986";
+
 async function tmdbFetch(path: string, params: Record<string, string> = {}): Promise<Response> {
   const url = new URL(`${TMDB_BASE}${path}`);
   url.searchParams.set("api_key", TMDB_KEY);
   url.searchParams.set("language", "ko-KR");
+  // 전역 성인 콘텐츠 차단 (discover/search에서 동작, 그 외 엔드포인트는 무시되어 무해)
+  url.searchParams.set("include_adult", "false");
+  url.searchParams.set("without_keywords", ADULT_EXCLUDE_KEYWORDS);
 
   for (const [k, v] of Object.entries(params)) {
     url.searchParams.set(k, v);
@@ -123,12 +132,26 @@ async function handleDiscover(params: URLSearchParams): Promise<unknown> {
 
   if (!genreId || !/^\d+$/.test(genreId)) throw new Error("genre_id is required and must be numeric");
 
-  const res = await tmdbFetch(`/discover/${mediaType}`, {
+  const query: Record<string, string> = {
     with_genres: genreId,
     sort_by: params.get("sort_by") || "popularity.desc",
     page: params.get("page") || "1",
-    "vote_count.gte": "50",
-  });
+    "vote_count.gte": params.get("vote_count_gte") || "50",
+  };
+
+  // 홈 카테고리 행을 위한 선택적 필터 통과 (예: 한국 예능=with_origin_country, 일본 애니=with_original_language)
+  const passthrough = [
+    "with_origin_country",
+    "with_original_language",
+    "watch_region",
+    "with_watch_monetization_types",
+  ];
+  for (const key of passthrough) {
+    const v = params.get(key);
+    if (v && /^[A-Za-z,|\-]+$/.test(v)) query[key] = v;
+  }
+
+  const res = await tmdbFetch(`/discover/${mediaType}`, query);
   return res.json();
 }
 
@@ -140,6 +163,9 @@ async function handleDetail(params: URLSearchParams): Promise<unknown> {
 
   const res = await tmdbFetch(`/${mediaType}/${contentId}`, {
     append_to_response: "credits,videos",
+    // language=ko-KR 가 강제되므로, 예고편은 한국어+영어 영상을 함께 포함시킨다
+    // (한국어 예고편이 없는 작품이 많아 en 폴백이 없으면 거의 비어버림)
+    include_video_language: "ko,en",
   });
   return res.json();
 }

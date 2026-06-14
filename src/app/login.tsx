@@ -5,7 +5,6 @@ import {
   Pressable,
   ActivityIndicator,
   StyleSheet,
-  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EulaModal } from "@/components/ui/EulaModal";
@@ -26,7 +25,7 @@ export default function LoginScreen() {
       {/* 로고 영역 */}
       <View style={styles.logoArea}>
         <Text style={styles.logoEmoji}>🎬</Text>
-        <Text style={styles.appName}>OTT Info</Text>
+        <Text style={styles.appName}>어디서볼까</Text>
         <Text style={styles.tagline}>
           영화·드라마를 어디서 볼 수 있는지{"\n"}한 번에 확인하세요
         </Text>

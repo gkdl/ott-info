@@ -14,21 +14,15 @@ import { useRouter } from "expo-router";
 import { CachedImage } from "@/components/ui/CachedImage";
 import { EmptyView, SectionError } from "@/components/shared/StateViews";
 import { useBrowseByProvider } from "@/hooks/useTmdb";
-import { useGenreList } from "@/hooks/useTmdb";
 import {
   OTT_PROVIDERS,
   GENRE_OPTIONS,
-  MEDIA_TYPE_TABS,
+  CONTENT_CATEGORIES,
   type OttProvider,
+  type ContentCategory,
 } from "@/constants/ottProviders";
-import type { MediaType } from "@/types/tmdb";
-import type { TmdbContent, TmdbMovie, TmdbTv } from "@/types/tmdb";
-
-function getItemInfo(item: TmdbContent, mediaType: MediaType) {
-  const isMovie = mediaType === "movie" || "title" in item;
-  const title = isMovie ? (item as TmdbMovie).title : (item as TmdbTv).name;
-  return { title };
-}
+import { getContentInfo } from "@/lib/tmdbContent";
+import type { MediaType, TmdbContent } from "@/types/tmdb";
 
 // ─── OTT 선택 칩 ─────────────────────────────────────────────────────────────
 
@@ -96,8 +90,7 @@ function GridItem({
   mediaType: MediaType;
 }) {
   const router = useRouter();
-  const { title } = getItemInfo(item, mediaType);
-  const itemMediaType = (item.media_type ?? mediaType) as MediaType;
+  const { title, mediaType: itemMediaType } = getContentInfo(item, mediaType);
 
   return (
     <Pressable
@@ -135,11 +128,15 @@ export default function BrowseScreen() {
     [width]
   );
 
-  const [mediaType, setMediaType] = useState<MediaType>("movie");
+  const [category, setCategory] = useState<ContentCategory>(CONTENT_CATEGORIES[0]);
   const [selectedProvider, setSelectedProvider] = useState<OttProvider>(OTT_PROVIDERS[0]);
-  const [selectedGenreId, setSelectedGenreId] = useState(0);
+  const [selectedSubGenre, setSelectedSubGenre] = useState(0);
 
-  const genres = GENRE_OPTIONS[mediaType];
+  const mediaType = category.mediaType;
+  // 영화·드라마는 세부 장르 칩으로 추가 필터링, 예능·애니 등은 카테고리 자체가 장르
+  const isBroad = category.genreId == null;
+  const effectiveGenreId = isBroad ? selectedSubGenre : category.genreId!;
+  const subGenres = GENRE_OPTIONS[mediaType];
 
   const {
     data,
@@ -149,18 +146,18 @@ export default function BrowseScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useBrowseByProvider(mediaType, selectedProvider.id, selectedGenreId);
+  } = useBrowseByProvider(mediaType, selectedProvider.id, effectiveGenreId);
 
   const items = data?.pages.flatMap((p) => p.results) ?? [];
 
-  function handleMediaTypeChange(mt: MediaType) {
-    setMediaType(mt);
-    setSelectedGenreId(0);
+  function handleCategoryChange(c: ContentCategory) {
+    setCategory(c);
+    setSelectedSubGenre(0);
   }
 
   function handleProviderSelect(p: OttProvider) {
     setSelectedProvider(p);
-    setSelectedGenreId(0);
+    setSelectedSubGenre(0);
   }
 
   return (
@@ -168,30 +165,32 @@ export default function BrowseScreen() {
       {/* ── 헤더 ─────────────────────────────────────────────────────── */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>탐색</Text>
+      </View>
 
-        {/* 영화 / 드라마 탭 */}
-        <View style={styles.mediaTypeTabs}>
-          {MEDIA_TYPE_TABS.map((tab) => (
+      {/* ── 카테고리 (영화/드라마/예능/애니/다큐/키즈) ─────────────────── */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoryRow}
+        style={styles.categoryScroll}
+      >
+        {CONTENT_CATEGORIES.map((c) => {
+          const active = category.key === c.key;
+          return (
             <Pressable
-              key={tab.value}
-              style={[
-                styles.mediaTypeTab,
-                mediaType === tab.value && styles.mediaTypeTabActive,
-              ]}
-              onPress={() => handleMediaTypeChange(tab.value)}
+              key={c.key}
+              style={[styles.categoryChip, active && styles.categoryChipActive]}
+              onPress={() => handleCategoryChange(c)}
             >
               <Text
-                style={[
-                  styles.mediaTypeTabText,
-                  mediaType === tab.value && styles.mediaTypeTabTextActive,
-                ]}
+                style={[styles.categoryChipText, active && styles.categoryChipTextActive]}
               >
-                {tab.label}
+                {c.emoji} {c.label}
               </Text>
             </Pressable>
-          ))}
-        </View>
-      </View>
+          );
+        })}
+      </ScrollView>
 
       {/* ── OTT 선택 ──────────────────────────────────────────────────── */}
       <ScrollView
@@ -210,22 +209,24 @@ export default function BrowseScreen() {
         ))}
       </ScrollView>
 
-      {/* ── 장르 선택 ─────────────────────────────────────────────────── */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.genreRow}
-        style={styles.genreScroll}
-      >
-        {genres.map((g) => (
-          <GenreChip
-            key={g.id}
-            name={g.name}
-            selected={selectedGenreId === g.id}
-            onPress={() => setSelectedGenreId(g.id)}
-          />
-        ))}
-      </ScrollView>
+      {/* ── 세부 장르 (영화·드라마에서만) ─────────────────────────────── */}
+      {isBroad && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.genreRow}
+          style={styles.genreScroll}
+        >
+          {subGenres.map((g) => (
+            <GenreChip
+              key={g.id}
+              name={g.name}
+              selected={selectedSubGenre === g.id}
+              onPress={() => setSelectedSubGenre(g.id)}
+            />
+          ))}
+        </ScrollView>
+      )}
 
       {/* ── 콘텐츠 결과 ──────────────────────────────────────────────── */}
       <View style={styles.listContainer}>
@@ -280,26 +281,33 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "800",
   },
-  mediaTypeTabs: {
-    flexDirection: "row",
-    backgroundColor: "#111827",
-    borderRadius: 10,
-    padding: 3,
-  },
-  mediaTypeTab: {
+  // 카테고리 칩
+  categoryScroll: { flexGrow: 0, flexShrink: 0, minHeight: 44 },
+  categoryRow: {
     paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingBottom: 8,
+    gap: 8,
+    flexDirection: "row",
+    flexWrap: "nowrap",
   },
-  mediaTypeTabActive: {
+  categoryChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 18,
+    backgroundColor: "#111827",
+    borderWidth: 1,
+    borderColor: "#1f2937",
+  },
+  categoryChipActive: {
     backgroundColor: "#6366f1",
+    borderColor: "#6366f1",
   },
-  mediaTypeTabText: {
-    color: "#6b7280",
+  categoryChipText: {
+    color: "#9ca3af",
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
   },
-  mediaTypeTabTextActive: {
+  categoryChipTextActive: {
     color: "#fff",
   },
 
