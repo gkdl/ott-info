@@ -3,6 +3,7 @@ name: Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch: # Actions 탭에서 수동 실행("Run workflow") 가능
 
 jobs:
   # ── 1. Supabase Edge Functions + DB 마이그레이션 배포 ─────────────────────
