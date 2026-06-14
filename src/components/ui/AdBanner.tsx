@@ -6,10 +6,10 @@ import {
   TestIds,
 } from "react-native-google-mobile-ads";
 
-// 실제 배포 시 AdMob 콘솔에서 발급받은 Unit ID로 교체
+// 개발 중에는 테스트 광고, 릴리스에서는 실제 AdMob 광고 단위 사용
 const BANNER_ID = Platform.select({
-  ios: __DEV__ ? TestIds.BANNER : "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX",
-  android: __DEV__ ? TestIds.BANNER : "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX",
+  android: __DEV__ ? TestIds.BANNER : "ca-app-pub-6630409826466167/3359563605",
+  ios: TestIds.BANNER, // iOS 출시 시 실제 iOS 배너 단위 ID로 교체
 }) as string;
 
 interface AdBannerProps {

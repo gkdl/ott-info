@@ -7,6 +7,8 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+// 카카오 연결 끊기(unlink)용 Admin 키. supabase secrets set KAKAO_ADMIN_KEY=... 로 등록.
+const kakaoAdminKey = Deno.env.get("KAKAO_ADMIN_KEY") ?? "";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -72,6 +74,33 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const adminClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+
+  // ── 2-1. 카카오 연결 끊기 (unlink) ───────────────────────────────────────────
+  // 카카오 정책상 회원 탈퇴 시 앱 연결을 끊어야 함. 안 끊으면 재가입 시 동의 화면이
+  // 생략되고, 카카오 "연결된 서비스"에 앱이 남는다.
+  // 실패해도 계정 삭제 자체는 진행한다(탈퇴가 막히면 안 되므로 non-fatal).
+  const kakaoUserId = user.identities?.find((i) => i.provider === "kakao")?.id;
+  if (kakaoAdminKey && kakaoUserId) {
+    try {
+      const res = await fetch("https://kapi.kakao.com/v1/user/unlink", {
+        method: "POST",
+        headers: {
+          Authorization: `KakaoAK ${kakaoAdminKey}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `target_id_type=user_id&target_id=${kakaoUserId}`,
+      });
+      if (!res.ok) {
+        console.error(`[delete-account] kakao unlink failed status=${res.status} body=${await res.text()}`);
+      } else {
+        console.log(`[delete-account] kakao unlinked id=${kakaoUserId}`);
+      }
+    } catch (e) {
+      console.error(`[delete-account] kakao unlink error=${e instanceof Error ? e.message : String(e)}`);
+    }
+  } else {
+    console.warn(`[delete-account] kakao unlink skipped (adminKey=${!!kakaoAdminKey}, kakaoId=${kakaoUserId ?? "none"})`);
+  }
 
   const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
 

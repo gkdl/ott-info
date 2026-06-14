@@ -14,10 +14,8 @@ interface MenuItemProps {
 function MenuItem({ label, sublabel, onPress, variant = "default", icon }: MenuItemProps) {
   return (
     <Pressable
-      style={({ pressed }) => [
-        styles.menuItem,
-        pressed && styles.menuItemPressed,
-      ]}
+      style={styles.menuItem}
+      android_ripple={{ color: "#1f2937" }}
       onPress={onPress}
     >
       {icon && <Text style={styles.menuIcon}>{icon}</Text>}
@@ -113,7 +111,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "#1f2937",
     gap: 12,
   },
-  menuItemPressed: { backgroundColor: "#1f2937" },
   menuIcon: { fontSize: 18, width: 24, textAlign: "center" },
   menuTexts: { flex: 1, gap: 2 },
   menuLabel: { color: "#e5e7eb", fontSize: 15 },

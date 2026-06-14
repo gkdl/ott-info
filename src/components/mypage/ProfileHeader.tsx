@@ -54,7 +54,7 @@ export function ProfileHeader() {
         <Image
           source={
             profile.avatar_url
-              ? { uri: profile.avatar_url }
+              ? { uri: profile.avatar_url.replace(/^http:\/\//, "https://") }
               : require("@/assets/default-avatar.png")
           }
           style={styles.avatar}

@@ -78,8 +78,11 @@ export async function signInWithKakao(): Promise<KakaoLoginResult> {
       (user.user_metadata?.full_name as string | undefined) ??
       (user.user_metadata?.name as string | undefined) ??
       "사용자";
-    const avatarUrl =
-      (user.user_metadata?.avatar_url as string | undefined) ?? null;
+    // 카카오 프로필 이미지는 http로 오는 경우가 있어 https로 강제 (안드로이드 cleartext 차단 회피)
+    const rawAvatar = user.user_metadata?.avatar_url as string | undefined;
+    const avatarUrl = rawAvatar
+      ? rawAvatar.replace(/^http:\/\//, "https://")
+      : null;
 
     const profilePayload: InsertDto<"profiles"> = {
       id: user.id,

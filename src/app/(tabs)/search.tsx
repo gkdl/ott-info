@@ -33,7 +33,17 @@ export default function SearchScreen() {
     isFetchingNextPage,
   } = useSearch(debouncedQuery);
 
-  const results = data?.pages.flatMap((p) => p.results) ?? [];
+  // 페이지 경계에서 같은 작품이 중복으로 올 수 있어 id+media_type 기준 중복 제거
+  const results = React.useMemo(() => {
+    const flat = data?.pages.flatMap((p) => p.results) ?? [];
+    const seen = new Set<string>();
+    return flat.filter((it) => {
+      const k = `${it.id}-${it.media_type}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }, [data]);
   const showEmpty = debouncedQuery.length >= 2 && !isLoading && results.length === 0;
 
   // 검색어가 확정되면 최근 검색어에 저장
