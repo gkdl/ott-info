@@ -184,6 +184,18 @@ export interface Database {
         >;
       };
 
+      get_community_hot_feed: {
+        Args: { p_content_type?: string | null; p_limit?: number; p_offset?: number };
+        Returns: Array<
+          Database["public"]["Tables"]["reviews"]["Row"] & {
+            profile: Pick<
+              Database["public"]["Tables"]["profiles"]["Row"],
+              "nickname" | "avatar_url"
+            >;
+          }
+        >;
+      };
+
       get_replies_excluding_blocked: {
         Args: { p_review_id: number };
         Returns: Array<

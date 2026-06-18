@@ -246,6 +246,18 @@ export async function fetchCommunityReviews({
   contentType,
   page,
 }: FetchCommunityReviewsParams): Promise<ReviewWithProfile[]> {
+  // 인기(지금 뜨는): 시간 가중 점수 정렬은 서버 RPC에서 계산.
+  if (sort === "popular") {
+    const { data, error } = await supabase.rpc("get_community_hot_feed", {
+      p_content_type: contentType === "all" ? null : contentType,
+      p_limit: PAGE_SIZE,
+      p_offset: (page - 1) * PAGE_SIZE,
+    });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r) => ({ ...r, is_liked_by_me: false })) as unknown as ReviewWithProfile[];
+  }
+
+  // 최신: reviews 직접 조회 (RLS public read). 차단 제외는 클라이언트에서 처리.
   let query = supabase
     .from("reviews")
     .select("*, profile:profiles(nickname, avatar_url)")
@@ -256,17 +268,9 @@ export async function fetchCommunityReviews({
     query = query.eq("content_type", contentType);
   }
 
-  query =
-    sort === "popular"
-      ? query
-          .order("like_count", { ascending: false })
-          .order("created_at", { ascending: false })
-      : query.order("created_at", { ascending: false });
-
-  const { data, error } = await query.range(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE - 1
-  );
+  const { data, error } = await query
+    .order("created_at", { ascending: false })
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
   if (error) throw new Error(error.message);
   return (data ?? []).map((r) => ({ ...r, is_liked_by_me: false })) as unknown as ReviewWithProfile[];
