@@ -227,3 +227,25 @@ export async function fetchCommunityFeed(limit = 10, offset = 0): Promise<Review
   if (error) throw new Error(error.message);
   return (data ?? []) as ReviewWithProfile[];
 }
+
+// ─── 커뮤니티 탭 피드 (최신/인기, 콘텐츠 타입 필터) ─────────────────────────
+
+export type CommunitySort = "latest" | "popular";
+export type CommunityContentType = "all" | "movie" | "tv";
+
+export async function fetchCommunityFeedV2(
+  limit: number,
+  offset: number,
+  sort: CommunitySort,
+  contentType: CommunityContentType
+): Promise<ReviewWithProfile[]> {
+  const { data, error } = await supabase.rpc("get_community_feed_v2", {
+    p_limit: limit,
+    p_offset: offset,
+    p_sort: sort,
+    p_content_type: contentType,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ReviewWithProfile[];
+}

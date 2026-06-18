@@ -49,6 +49,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="community"
+        options={{
+          title: "커뮤니티",
+          tabBarIcon: tabIcon("people-outline", "people"),
+        }}
+      />
+      <Tabs.Screen
         name="browse"
         options={{
           title: "탐색",

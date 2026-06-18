@@ -9,10 +9,13 @@ import {
   toggleLike,
   fetchMyReviews,
   fetchCommunityFeed,
+  fetchCommunityFeedV2,
   fetchReplies,
   createReply,
   PAGE_SIZE,
   type ReviewSort,
+  type CommunitySort,
+  type CommunityContentType,
   type CreateReviewInput,
   type UpdateReviewInput,
   type CreateReplyInput,
@@ -29,6 +32,8 @@ export const reviewKeys = {
   replies: (reviewId: number) => ["reviews", "replies", reviewId] as const,
   myReviews: (userId: string) => ["reviews", "mine", userId] as const,
   communityFeed: () => ["reviews", "community-feed"] as const,
+  communityFeedV2: (sort: CommunitySort, contentType: CommunityContentType) =>
+    ["reviews", "community-feed-v2", sort, contentType] as const,
 };
 
 // ─── 리뷰 목록 (useInfiniteQuery + 차단 유저 제외 RPC) ───────────────────────
@@ -214,6 +219,23 @@ export function useCreateReply(parentId: number) {
     onError: (err: Error) => {
       Alert.alert("답글 작성 실패", err.message);
     },
+  });
+}
+
+// ─── 커뮤니티 피드 V2 (커뮤니티 탭) ─────────────────────────────────────────
+
+export function useCommunityFeedV2(
+  sort: CommunitySort,
+  contentType: CommunityContentType
+) {
+  return useInfiniteQuery({
+    queryKey: reviewKeys.communityFeedV2(sort, contentType),
+    queryFn: ({ pageParam = 0 }) =>
+      fetchCommunityFeedV2(20, pageParam as number, sort, contentType),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === 20 ? allPages.length * 20 : undefined,
+    staleTime: 2 * 60 * 1000,
   });
 }
 
