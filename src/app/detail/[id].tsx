@@ -120,7 +120,7 @@ export default function DetailScreen() {
       </ScrollView>
 
       {/* 하단 고정 광고 배너 */}
-      <AdBanner />
+      <AdBanner safeBottom />
 
       {/* 토스트 (OTT 딥링크 실패 안내 등) */}
       <Toast />

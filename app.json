@@ -18,13 +18,13 @@
       "buildNumber": "1",
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
-          "netflix",
+          "nflx",
           "wavve",
           "watcha",
           "disneyplus",
-          "appletv",
-          "appletvplus",
-          "amazonprime",
+          "videos",
+          "primevideo",
+          "tving",
           "coupangplay",
           "paramountplus"
         ]

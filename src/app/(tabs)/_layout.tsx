@@ -1,8 +1,11 @@
 import type { ComponentProps } from "react";
+import { View } from "react-native";
 import { Tabs } from "expo-router";
+import { BottomTabBar } from "expo-router/build/react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import type { ColorValue } from "react-native";
+import { AdBanner } from "@/components/ui/AdBanner";
 
 type IoniconsName = ComponentProps<typeof Ionicons>["name"];
 
@@ -17,6 +20,13 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => (
+        <View>
+          {/* 탭바 위에 배너 광고 — 모든 탭 화면에 노출 */}
+          <AdBanner />
+          <BottomTabBar {...props} />
+        </View>
+      )}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -29,7 +39,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: "#6366f1",
         tabBarInactiveTintColor: "#6b7280",
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 9.5,
           fontWeight: "600",
           marginTop: 2,
         },
@@ -54,6 +64,13 @@ export default function TabsLayout() {
         options={{
           title: "탐색",
           tabBarIcon: tabIcon("tv-outline", "tv"),
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          title: "커뮤니티",
+          tabBarIcon: tabIcon("chatbubble-outline", "chatbubble"),
         }}
       />
       <Tabs.Screen

@@ -1,5 +1,6 @@
 import React from "react";
 import { View, StyleSheet, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   BannerAd,
   BannerAdSize,
@@ -14,11 +15,21 @@ const BANNER_ID = Platform.select({
 
 interface AdBannerProps {
   style?: object;
+  // 화면 최하단(시스템 네비게이션바 위)에 직접 붙을 때 true.
+  // 탭바 위에 얹는 경우엔 탭바가 safe-area를 처리하므로 false로 둔다.
+  safeBottom?: boolean;
 }
 
-export function AdBanner({ style }: AdBannerProps) {
+export function AdBanner({ style, safeBottom = false }: AdBannerProps) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.container, style]}>
+    <View
+      style={[
+        styles.container,
+        safeBottom && { paddingBottom: 8 + insets.bottom },
+        style,
+      ]}
+    >
       <BannerAd
         unitId={BANNER_ID}
         size={BannerAdSize.BANNER}

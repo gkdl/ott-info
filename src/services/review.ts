@@ -227,3 +227,47 @@ export async function fetchCommunityFeed(limit = 10, offset = 0): Promise<Review
   if (error) throw new Error(error.message);
   return (data ?? []) as ReviewWithProfile[];
 }
+
+// ─── 커뮤니티 탭 (정렬 + 타입 필터) ──────────────────────────────────────────
+// 전용 RPC 없이 reviews 직접 조회. RLS(public read, is_hidden=false)로 안전.
+// 차단 유저 제외는 클라이언트(useBlockStore)에서 처리.
+
+export type CommunitySort = "latest" | "popular";
+export type CommunityType = "all" | "movie" | "tv";
+
+export interface FetchCommunityReviewsParams {
+  sort: CommunitySort;
+  contentType: CommunityType;
+  page: number;
+}
+
+export async function fetchCommunityReviews({
+  sort,
+  contentType,
+  page,
+}: FetchCommunityReviewsParams): Promise<ReviewWithProfile[]> {
+  let query = supabase
+    .from("reviews")
+    .select("*, profile:profiles(nickname, avatar_url)")
+    .is("parent_id", null) // 답글 제외, 최상위 리뷰만
+    .eq("is_hidden", false);
+
+  if (contentType !== "all") {
+    query = query.eq("content_type", contentType);
+  }
+
+  query =
+    sort === "popular"
+      ? query
+          .order("like_count", { ascending: false })
+          .order("created_at", { ascending: false })
+      : query.order("created_at", { ascending: false });
+
+  const { data, error } = await query.range(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE - 1
+  );
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => ({ ...r, is_liked_by_me: false })) as unknown as ReviewWithProfile[];
+}

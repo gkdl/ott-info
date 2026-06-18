@@ -9,10 +9,13 @@ import {
   toggleLike,
   fetchMyReviews,
   fetchCommunityFeed,
+  fetchCommunityReviews,
   fetchReplies,
   createReply,
   PAGE_SIZE,
   type ReviewSort,
+  type CommunitySort,
+  type CommunityType,
   type CreateReviewInput,
   type UpdateReviewInput,
   type CreateReplyInput,
@@ -29,6 +32,8 @@ export const reviewKeys = {
   replies: (reviewId: number) => ["reviews", "replies", reviewId] as const,
   myReviews: (userId: string) => ["reviews", "mine", userId] as const,
   communityFeed: () => ["reviews", "community-feed"] as const,
+  communityTab: (sort: CommunitySort, type: CommunityType) =>
+    ["reviews", "community-tab", sort, type] as const,
 };
 
 // ─── 리뷰 목록 (useInfiniteQuery + 차단 유저 제외 RPC) ───────────────────────
@@ -228,5 +233,19 @@ export function useCommunityFeed() {
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length === 10 ? allPages.length * 10 : undefined,
     staleTime: 3 * 60 * 1000,
+  });
+}
+
+// ─── 커뮤니티 탭 (정렬 + 타입 필터) ──────────────────────────────────────────
+
+export function useCommunityReviews(sort: CommunitySort, contentType: CommunityType) {
+  return useInfiniteQuery({
+    queryKey: reviewKeys.communityTab(sort, contentType),
+    queryFn: ({ pageParam = 1 }) =>
+      fetchCommunityReviews({ sort, contentType, page: pageParam as number }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === PAGE_SIZE ? allPages.length + 1 : undefined,
+    staleTime: 60 * 1000,
   });
 }

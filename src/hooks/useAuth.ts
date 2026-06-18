@@ -70,7 +70,8 @@ export function useSignOut() {
     onSuccess: () => {
       // 모든 쿼리 캐시 초기화 (다른 유저 로그인 시 이전 데이터 노출 방지)
       queryClient.clear();
-      router.replace("/login");
+      // 로그아웃 후엔 게스트로 계속 둘러볼 수 있게 홈으로 이동
+      router.replace("/(tabs)/home");
     },
     onError: () => {
       alertDialog("오류", "로그아웃 중 문제가 발생했습니다.");
@@ -100,7 +101,7 @@ export function useDeleteAccount() {
       }
       queryClient.clear();
       await alertDialog("탈퇴 완료", "계정과 모든 데이터가 삭제되었습니다.");
-      router.replace("/login");
+      router.replace("/(tabs)/home");
     },
     onError: () => {
       alertDialog("오류", "회원탈퇴 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
