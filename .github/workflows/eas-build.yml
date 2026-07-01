@@ -1,0 +1,62 @@
+name: EAS Build (Android)
+
+# 수동 실행 전용(Actions 탭 → Run workflow). EAS 빌드는 무료 할당량이 있으므로
+# push마다 자동 빌드하지 않고 필요할 때만 트리거한다.
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "eas.json build profile"
+        default: production
+        type: choice
+        options: [production, preview]
+
+jobs:
+  build:
+    name: EAS Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Setup EAS CLI
+        run: npm install -g eas-cli
+
+      # 키스토어는 리포에 없으므로(gitignore) GitHub Secret에서 복원한다.
+      # 필요한 Secrets:
+      #   ANDROID_KEYSTORE_BASE64  = base64 -w0 ott-info-upload.keystore
+      #   ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+      - name: Restore signing credentials
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > ott-info-upload.keystore
+          cat > credentials.json <<JSON
+          {
+            "android": {
+              "keystore": {
+                "keystorePath": "ott-info-upload.keystore",
+                "keystorePassword": "$KEYSTORE_PASSWORD",
+                "keyAlias": "$KEY_ALIAS",
+                "keyPassword": "$KEY_PASSWORD"
+              }
+            }
+          }
+          JSON
+
+      - name: EAS Build (Android)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --platform android --profile ${{ inputs.profile }} --non-interactive --no-wait
