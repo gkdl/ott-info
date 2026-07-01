@@ -1,0 +1,53 @@
+name: Deploy Supabase
+
+# supabase/ 하위(마이그레이션·Edge Functions)가 main에 바뀔 때만 실행.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/**"
+      - ".github/workflows/deploy-supabase.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          # latest(2.109.x)에서 함수 배포가 500 "Failed to set function store"로 실패해
+          # 로컬에서 정상 배포되던 버전으로 고정.
+          version: 2.107.0
+
+      - name: Link Supabase project
+        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Run DB migrations
+        run: supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      # 함수별 개별 배포 + 재시도 (일시적 500 "Failed to set function store" 대응)
+      - name: Deploy Edge Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          deploy() {
+            for i in 1 2 3; do
+              supabase functions deploy "$1" --no-verify-jwt && return 0
+              echo "::warning::deploy $1 실패(시도 $i), 10초 후 재시도..."
+              sleep 10
+            done
+            echo "::error::deploy $1 최종 실패"
+            return 1
+          }
+          deploy tmdb-proxy
+          deploy delete-account
