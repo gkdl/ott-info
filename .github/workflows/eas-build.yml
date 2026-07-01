@@ -1,8 +1,23 @@
 name: EAS Build (Android)
 
-# 수동 실행 전용(Actions 탭 → Run workflow). EAS 빌드는 무료 할당량이 있으므로
-# push마다 자동 빌드하지 않고 필요할 때만 트리거한다.
+# main에 앱 코드가 머지되면 자동으로 EAS 빌드(AAB) 생성.
+# 문서/서버(supabase)/워크플로만 바뀐 경우엔 빌드하지 않도록 paths 필터를 둔다
+# (EAS 무료 빌드 할당량 절약). 수동 실행(workflow_dispatch)도 계속 가능.
 on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "assets/**"
+      - "app.json"
+      - "package.json"
+      - "package-lock.json"
+      - "babel.config.js"
+      - "metro.config.js"
+      - "tsconfig.json"
+      - "plugins/**"
+      - "eas.json"
+      - ".github/workflows/eas-build.yml"
   workflow_dispatch:
     inputs:
       profile:
@@ -56,7 +71,8 @@ jobs:
           }
           JSON
 
+      # push 트리거엔 inputs가 없으므로 production으로 폴백
       - name: EAS Build (Android)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --platform android --profile ${{ inputs.profile }} --non-interactive --no-wait
+        run: eas build --platform android --profile ${{ github.event.inputs.profile || 'production' }} --non-interactive --no-wait
