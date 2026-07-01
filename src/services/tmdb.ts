@@ -147,13 +147,15 @@ export const tmdbService = {
     mediaType: MediaType = "movie",
     providerId: number,
     genreId?: number,
-    page = 1
+    page = 1,
+    sortBy = "popularity.desc"
   ) {
     return callProxy<TmdbPaginatedResult<TmdbContent>>({
       endpoint: "discover_by_provider",
       media_type: mediaType,
       provider_id: String(providerId),
       ...(genreId ? { genre_id: String(genreId) } : {}),
+      sort_by: sortBy,
       page: String(page),
     });
   },

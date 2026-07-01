@@ -6,8 +6,13 @@ import type { ContentCategory } from "@/constants/ottProviders";
 export const tmdbKeys = {
   similar: (mediaType: string, contentId: number) =>
     ["tmdb", "similar", mediaType, contentId] as const,
-  browseByProvider: (mediaType: string, providerId: number, genreId: number) =>
-    ["tmdb", "browse_provider", mediaType, providerId, genreId] as const,
+  browseByProvider: (
+    mediaType: string,
+    providerId: number,
+    genreId: number,
+    sortBy: string
+  ) =>
+    ["tmdb", "browse_provider", mediaType, providerId, genreId, sortBy] as const,
   providerPicks: (mediaType: string, providerId: number) =>
     ["tmdb", "provider_picks", mediaType, providerId] as const,
   categoryRow: (key: string) => ["tmdb", "category_row", key] as const,
@@ -138,16 +143,18 @@ export function useProviderPicks(mediaType: MediaType, providerId: number) {
 export function useBrowseByProvider(
   mediaType: MediaType,
   providerId: number,
-  genreId: number  // 0 = 전체
+  genreId: number,  // 0 = 전체
+  sortBy: string = "popularity.desc"
 ) {
   return useInfiniteQuery({
-    queryKey: tmdbKeys.browseByProvider(mediaType, providerId, genreId),
+    queryKey: tmdbKeys.browseByProvider(mediaType, providerId, genreId, sortBy),
     queryFn: ({ pageParam = 1 }) =>
       tmdbService.discoverByProvider(
         mediaType,
         providerId,
         genreId > 0 ? genreId : undefined,
-        pageParam as number
+        pageParam as number,
+        sortBy
       ),
     initialPageParam: 1,
     getNextPageParam: (last) =>

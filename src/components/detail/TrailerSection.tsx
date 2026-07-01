@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, FlatList, Pressable, Linking, StyleSheet } from "react-native";
 import { Image } from "expo-image";
-import { Ionicons } from "@expo/vector-icons";
 import type { TmdbVideo } from "@/types/tmdb";
 
 interface TrailerSectionProps {
@@ -55,9 +54,6 @@ export function TrailerSection({ videos }: TrailerSectionProps) {
                 contentFit="cover"
                 transition={200}
               />
-              <View style={styles.playOverlay}>
-                <Ionicons name="play-circle" size={48} color="rgba(255,255,255,0.95)" />
-              </View>
             </View>
             <Text style={styles.cardTitle} numberOfLines={2}>
               {item.name}
@@ -87,10 +83,5 @@ const styles = StyleSheet.create({
     backgroundColor: "#111827",
   },
   thumb: { width: "100%", height: "100%" },
-  playOverlay: {
-    ...StyleSheet.absoluteFill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   cardTitle: { color: "#e5e7eb", fontSize: 12, lineHeight: 16 },
 });

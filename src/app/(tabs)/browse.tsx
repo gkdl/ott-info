@@ -24,6 +24,28 @@ import {
 import { getContentInfo } from "@/lib/tmdbContent";
 import type { MediaType, TmdbContent } from "@/types/tmdb";
 
+// ─── 정렬 기준 ───────────────────────────────────────────────────────────────
+
+type SortKey = "popularity" | "rating" | "latest";
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "popularity", label: "인기" },
+  { key: "rating", label: "평점" },
+  { key: "latest", label: "최신" },
+];
+
+// TMDB discover sort_by 값으로 변환 (최신순은 미디어 타입별로 필드가 다름)
+function resolveSortBy(key: SortKey, mediaType: MediaType): string {
+  switch (key) {
+    case "rating":
+      return "vote_average.desc";
+    case "latest":
+      return mediaType === "tv" ? "first_air_date.desc" : "primary_release_date.desc";
+    default:
+      return "popularity.desc";
+  }
+}
+
 // ─── OTT 선택 칩 ─────────────────────────────────────────────────────────────
 
 function OttChip({
@@ -131,6 +153,7 @@ export default function BrowseScreen() {
   const [category, setCategory] = useState<ContentCategory>(CONTENT_CATEGORIES[0]);
   const [selectedProvider, setSelectedProvider] = useState<OttProvider>(OTT_PROVIDERS[0]);
   const [selectedSubGenre, setSelectedSubGenre] = useState(0);
+  const [sortKey, setSortKey] = useState<SortKey>("popularity");
 
   const mediaType = category.mediaType;
   // 영화·드라마는 세부 장르 칩으로 추가 필터링, 예능·애니 등은 카테고리 자체가 장르
@@ -146,7 +169,12 @@ export default function BrowseScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useBrowseByProvider(mediaType, selectedProvider.id, effectiveGenreId);
+  } = useBrowseByProvider(
+    mediaType,
+    selectedProvider.id,
+    effectiveGenreId,
+    resolveSortBy(sortKey, mediaType)
+  );
 
   const items = data?.pages.flatMap((p) => p.results) ?? [];
 
@@ -162,9 +190,25 @@ export default function BrowseScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* ── 헤더 ─────────────────────────────────────────────────────── */}
+      {/* ── 헤더 (제목 + 정렬) ────────────────────────────────────────── */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>탐색</Text>
+        <View style={styles.sortGroup}>
+          {SORT_OPTIONS.map((opt) => {
+            const active = sortKey === opt.key;
+            return (
+              <Pressable
+                key={opt.key}
+                style={[styles.sortChip, active && styles.sortChipActive]}
+                onPress={() => setSortKey(opt.key)}
+              >
+                <Text style={[styles.sortText, active && styles.sortTextActive]}>
+                  {opt.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       {/* ── 카테고리 (영화/드라마/예능/애니/다큐/키즈) ─────────────────── */}
@@ -280,6 +324,30 @@ const styles = StyleSheet.create({
     color: "#f9fafb",
     fontSize: 22,
     fontWeight: "800",
+  },
+  // 정렬 칩 (헤더 우측)
+  sortGroup: {
+    flexDirection: "row",
+    backgroundColor: "#111827",
+    borderRadius: 10,
+    padding: 3,
+    gap: 2,
+  },
+  sortChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  sortChipActive: {
+    backgroundColor: "#6366f1",
+  },
+  sortText: {
+    color: "#9ca3af",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  sortTextActive: {
+    color: "#fff",
   },
   // 카테고리 칩
   categoryScroll: { flexGrow: 0, flexShrink: 0, minHeight: 44 },
