@@ -8,9 +8,15 @@ const path = require("path");
  * (EAS와 동일 소스)에서 읽는다. prebuild 마다 자동 재적용된다.
  *
  * credentials.json 이 없으면(키 없는 환경) 아무것도 안 하고 기본(디버그) 유지.
+ *
+ * EAS 빌드에서는 EAS가 credentials.json 으로 서명을 직접 처리하므로 이 주입을
+ * 건너뛴다(중복 signingConfig 충돌 방지). EAS_BUILD 환경변수로 판별.
  */
 module.exports = function withAndroidSigning(config) {
   return withAppBuildGradle(config, (cfg) => {
+    // EAS 빌드에서는 EAS가 서명을 담당 → 로컬용 주입 스킵
+    if (process.env.EAS_BUILD === "true") return cfg;
+
     const credFile = path.join(cfg.modRequest.projectRoot, "credentials.json");
     if (!fs.existsSync(credFile)) return cfg;
 
