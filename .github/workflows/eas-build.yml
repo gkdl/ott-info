@@ -46,32 +46,8 @@ jobs:
       - name: Setup EAS CLI
         run: npm install -g eas-cli
 
-      # 키스토어는 리포에 없으므로(gitignore) GitHub Secret에서 복원한다.
-      # 필요한 Secrets:
-      #   ANDROID_KEYSTORE_BASE64  = base64 -w0 ott-info-upload.keystore
-      #   ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
-      - name: Restore signing credentials
-        env:
-          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > ott-info-upload.keystore
-          cat > credentials.json <<JSON
-          {
-            "android": {
-              "keystore": {
-                "keystorePath": "ott-info-upload.keystore",
-                "keystorePassword": "$KEYSTORE_PASSWORD",
-                "keyAlias": "$KEY_ALIAS",
-                "keyPassword": "$KEY_PASSWORD"
-              }
-            }
-          }
-          JSON
-
-      # push 트리거엔 inputs가 없으므로 production으로 폴백
+      # 서명 키스토어는 EAS 서버에 보관된 것(remote)을 사용하므로 별도 복원 불필요.
+      # push 트리거엔 inputs가 없으므로 production으로 폴백.
       - name: EAS Build (Android)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
